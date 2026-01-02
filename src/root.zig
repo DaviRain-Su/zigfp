@@ -567,6 +567,84 @@ pub const NumberValidators = validation_ext.NumberValidators;
 pub const GenericValidators = validation_ext.GenericValidators;
 pub const ValidationCombinators = validation_ext.Combinators;
 
+// ============ v1.1.0 增强功能 ============
+
+/// ConnectionPool - HTTP 连接池
+pub const connection_pool = @import("connection_pool.zig");
+pub const ConnectionPool = connection_pool.ConnectionPool;
+pub const ConnectionPoolBuilder = connection_pool.ConnectionPoolBuilder;
+pub const PooledConnection = connection_pool.ConnectionPool.PooledConnection;
+pub const connectionPoolBuilder = connection_pool.connectionPool;
+
+/// Auth - 认证支持
+pub const auth = @import("auth.zig");
+pub const BasicAuth = auth.BasicAuth;
+pub const BearerToken = auth.BearerToken;
+pub const ApiKey = auth.ApiKey;
+pub const CustomAuth = auth.CustomAuth;
+pub const AuthMiddleware = auth.AuthMiddleware;
+pub const AuthBuilder = auth.AuthBuilder;
+pub const AuthType = auth.AuthType;
+pub const authBuilder = auth.auth;
+
+/// I18n - 国际化支持
+pub const i18n = @import("i18n.zig");
+pub const Locale = i18n.Locale;
+pub const MessageBundle = i18n.MessageBundle;
+pub const MessageKey = i18n.MessageKey;
+pub const LocaleContext = i18n.LocaleContext;
+pub const BuiltinMessages = i18n.BuiltinMessages;
+pub const formatMessage = i18n.formatMessage;
+
+/// Schema - JSON Schema 验证
+pub const schema = @import("schema.zig");
+pub const Schema = schema.Schema;
+pub const SchemaType = schema.SchemaType;
+pub const SchemaBuilder = schema.SchemaBuilder;
+pub const ValidationResult = schema.ValidationResult;
+pub const ValidationError = schema.ValidationError;
+pub const objectSchema = schema.objectSchema;
+
+// ============ v1.2.0 网络效果 ============
+
+/// TCP - TCP 客户端
+pub const tcp = @import("tcp.zig");
+pub const TcpClient = tcp.TcpClient;
+pub const TcpConfig = tcp.TcpConfig;
+pub const TcpError = tcp.TcpError;
+pub const TcpClientBuilder = tcp.TcpClientBuilder;
+pub const tcpClient = tcp.tcpClient;
+
+/// UDP - UDP 客户端
+pub const udp = @import("udp.zig");
+pub const UdpSocket = udp.UdpSocket;
+pub const UdpConfig = udp.UdpConfig;
+pub const UdpError = udp.UdpError;
+pub const UdpSocketBuilder = udp.UdpSocketBuilder;
+pub const udpSocket = udp.udpSocket;
+
+/// Network - 网络效果系统
+pub const network = @import("network.zig");
+pub const NetworkOp = network.NetworkOp;
+pub const NetworkEffect = network.NetworkEffect;
+pub const NetworkResult = network.NetworkResult;
+pub const NetworkError = network.NetworkError;
+pub const NetworkHandler = network.NetworkHandler;
+pub const NetworkSequence = network.NetworkSequence;
+
+/// WebSocket - WebSocket 客户端
+pub const websocket = @import("websocket.zig");
+pub const WebSocketClient = websocket.WebSocketClient;
+pub const WebSocketConfig = websocket.WebSocketConfig;
+pub const WebSocketError = websocket.WebSocketError;
+pub const WebSocketClientBuilder = websocket.WebSocketClientBuilder;
+pub const WebSocketFrame = websocket.Frame;
+pub const WebSocketOpcode = websocket.Opcode;
+pub const WebSocketMessage = websocket.Message;
+pub const WebSocketCloseCode = websocket.CloseCode;
+pub const webSocketClient = websocket.webSocketClient;
+pub const parseWebSocketUrl = websocket.parseUrl;
+
 // ============ 测试 ============
 
 test {

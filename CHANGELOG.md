@@ -1,6 +1,120 @@
 # zigFP - 函数式编程工具库更新日志
 
-## [v1.0.0] - 2026-01-02 - 稳定版本准备 ⏳
+## [v1.2.0] - 2026-01-02 - 网络效果 ✅
+
+### 🎯 新增功能
+
+#### TCP 客户端 (`tcp.zig`)
+- `TcpClient` - TCP 连接管理
+  - 连接/断开控制
+  - 数据发送/接收
+  - 统计信息（字节发送/接收）
+- `TcpConfig` - 配置选项
+  - 连接/读取/写入超时
+  - TCP_NODELAY 和 Keep-Alive 选项
+  - 接收缓冲区大小
+- `TcpClientBuilder` - 流畅 API 构建器
+
+#### UDP 客户端 (`udp.zig`)
+- `UdpSocket` - UDP 套接字管理
+  - 绑定本地地址
+  - 发送/接收数据报
+  - 广播支持
+- `UdpConfig` - 配置选项
+  - 读取/写入超时
+  - 广播和地址重用选项
+  - 接收缓冲区大小
+- `UdpSocketBuilder` - 流畅 API 构建器
+
+#### 网络效果系统 (`network.zig`)
+- `NetworkOp` - 网络操作类型
+  - TCP: connect, send, receive, disconnect
+  - UDP: bind, send, receive
+  - DNS: resolve
+- `NetworkEffect` - 网络效果包装
+- `NetworkResult` - 操作结果类型
+- `NetworkHandler` - 效果处理器
+  - 管理 TCP 连接和 UDP 套接字
+  - 自动资源清理
+- `NetworkSequence` - 可组合效果序列
+
+#### WebSocket 客户端 (`websocket.zig`)
+- `WebSocketClient` - WebSocket 连接管理
+  - 连接/关闭控制
+  - 文本/二进制消息发送
+  - 消息接收
+  - Ping/Pong 心跳
+- `WebSocketConfig` - 配置选项
+  - 超时设置
+  - 最大帧/消息大小
+  - 自动 Pong 响应
+- `Frame` - WebSocket 帧编解码
+- `Message` - 消息抽象
+- `CloseCode` - 标准关闭状态码
+- `WebSocketClientBuilder` - 流畅 API 构建器
+
+### 📊 统计数据
+- **总测试数**: 647个（从 609 增加，全部通过）
+- **新增模块**: 4个
+- **新增测试**: 38个
+- **无内存泄漏**
+
+---
+
+## [v1.1.0] - 2026-01-02 - 增强功能 ✅
+
+### 🎯 新增功能
+
+#### HTTP 连接池 (`connection_pool.zig`)
+- `ConnectionPool` - 连接池管理
+  - 连接复用，避免重复建立 TCP 连接
+  - 按主机分组管理连接
+  - 自动清理过期连接
+- `ConnectionPoolBuilder` - 流畅 API 构建器
+- 支持配置最大连接数、空闲超时时间等
+
+#### 认证支持 (`auth.zig`)
+- `BasicAuth` - HTTP 基本认证（Base64 编码）
+- `BearerToken` - Bearer Token 认证（OAuth2/JWT）
+- `ApiKey` - API Key 认证（Header 或 Query 参数）
+- `CustomAuth` - 自定义认证头
+- `AuthMiddleware` - 认证中间件
+- `AuthBuilder` - 流畅 API 构建器
+
+#### 国际化支持 (`i18n.zig`)
+- `Locale` - 语言区域设置（支持中/英/日/韩/法/德/西/俄）
+- `MessageBundle` - 多语言消息包
+- `LocaleContext` - 本地化上下文
+- `BuiltinMessages` - 内置中英文错误消息
+- `formatMessage` - 参数化消息格式化（{0}, {1}, ...）
+
+#### JSON Schema 验证 (`schema.zig`)
+- `Schema` - Schema 定义类型
+  - 类型验证（string, number, integer, boolean, array, object, null）
+  - 字符串约束（minLength, maxLength, pattern）
+  - 数值约束（min, max, exclusiveMin, exclusiveMax）
+  - 数组约束（minItems, maxItems, items schema）
+  - 对象约束（required fields, properties）
+  - 枚举值验证
+  - 可空类型支持
+- `SchemaBuilder` - 对象 Schema 构建器
+- `ValidationResult` - 验证结果（包含错误路径和消息）
+
+#### CI/CD 配置
+- GitHub Actions 工作流 (`.github/workflows/ci.yml`)
+  - 多平台测试（Linux, macOS, Windows）
+  - 代码格式检查
+  - 示例构建验证
+  - 文档检查
+
+### 📊 统计数据
+- **总测试数**: 609个（从 568 增加，全部通过）
+- **新增模块**: 4个
+- **无内存泄漏**
+
+---
+
+## [v1.0.0] - 2026-01-02 - 稳定版本 ✅
 
 ### 🎯 主要变更
 
@@ -25,6 +139,15 @@
 - `examples/monad_usage.zig` - Monad使用示例  
 - `examples/validation_example.zig` - 验证模式示例
 - 更新 `build.zig` 添加示例构建步骤
+
+#### 社区与生态系统
+- 创建 `CONTRIBUTING.md` - 贡献指南
+- 创建 `CODE_OF_CONDUCT.md` - 行为准则
+- 创建 `.github/ISSUE_TEMPLATE/` - Issue 模板
+  - `bug_report.md` - Bug 报告模板
+  - `feature_request.md` - 功能请求模板
+  - `question.md` - 问题咨询模板
+- 创建 `.github/PULL_REQUEST_TEMPLATE.md` - PR 模板
 
 ### 🔧 技术改进
 - 修复 `category.zig` 中 Zig 0.15 闭包限制问题

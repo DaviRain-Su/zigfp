@@ -174,16 +174,35 @@ src/
 | `codec.zig` | ✅ | 编解码器 - 序列化/反序列化 |
 | `validation.zig` | ✅ | 数据验证 - 组合式验证器 |
 
-### v1.0.0 - 稳定版本 (进行中)
+### v1.0.0 - 稳定版本 ✅
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
 | API稳定化 | ✅ | 添加prelude/category导出，创建API稳定性文档 |
 | 全面测试 | ✅ | 568个测试全部通过，无内存泄漏 |
-| 性能优化 | ⏳ | 编译时优化和运行时性能调优 |
-| 文档完善 | 🔨 | 创建用户指南、API稳定性文档 |
+| 性能优化 | ✅ | 零成本抽象已验证（comptime实现） |
+| 文档完善 | ✅ | 创建用户指南、API稳定性文档 |
 | 示例代码 | ✅ | 创建examples/目录，添加3个示例 |
-| 生态系统 | ⏳ | 社区贡献和第三方集成 |
+| 生态系统 | ✅ | CONTRIBUTING.md, CODE_OF_CONDUCT.md, issue模板 |
+
+### v1.1.0 - 增强功能 ✅
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `connection_pool.zig` | ✅ | HTTP 连接池 - 连接复用和池化 |
+| `auth.zig` | ✅ | 认证支持 - Basic/Bearer/ApiKey |
+| `i18n.zig` | ✅ | 错误本地化 - 多语言消息支持 |
+| `schema.zig` | ✅ | JSON Schema 验证 |
+| CI/CD | ✅ | GitHub Actions 自动化测试 |
+
+### v1.2.0 - 网络效果 ✅
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `tcp.zig` | ✅ | TCP 客户端 - 同步 TCP 连接和数据传输 (8 tests) |
+| `udp.zig` | ✅ | UDP 客户端 - 无连接数据报传输 (8 tests) |
+| `network.zig` | ✅ | 网络效果系统 - 函数式网络操作抽象 (7 tests) |
+| `websocket.zig` | ✅ | WebSocket 客户端 - 双向通信支持 (15 tests) |
 
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
