@@ -208,12 +208,12 @@ pub fn filterJson(
 ) !JsonValue {
     switch (value) {
         .array => |arr| {
-            var filtered = std.ArrayList(JsonValue).initCapacity(allocator, arr.len);
-            defer filtered.deinit();
+            var filtered = try std.ArrayList(JsonValue).initCapacity(allocator, arr.len);
+            defer filtered.deinit(allocator);
 
             for (arr) |item| {
                 if (predicate(item)) {
-                    try filtered.append(item);
+                    try filtered.append(allocator, item);
                 }
             }
 
@@ -251,6 +251,169 @@ pub fn foldJson(
     }
 
     return result;
+}
+
+/// JSON结构变换
+pub fn transformJson(
+    allocator: Allocator,
+    value: JsonValue,
+    transformer: *const fn (Allocator, JsonValue) Allocator.Error!JsonValue,
+) !JsonValue {
+    return switch (value) {
+        .array => |arr| {
+            const transformed = try allocator.alloc(JsonValue, arr.len);
+            for (arr, 0..) |item, i| {
+                transformed[i] = try transformJson(allocator, item, transformer);
+            }
+            return JsonValue{ .array = transformed };
+        },
+        .object => |obj| {
+            var result = std.StringHashMap(JsonValue).init(allocator);
+            var it = obj.iterator();
+            while (it.next()) |entry| {
+                const transformed_value = try transformJson(allocator, entry.value_ptr.*, transformer);
+                const key_copy = try allocator.dupe(u8, entry.key_ptr.*);
+                try result.put(key_copy, transformed_value);
+            }
+            return JsonValue{ .object = result };
+        },
+        else => transformer(allocator, value),
+    };
+}
+
+/// JSON操作链
+pub fn JsonPipeline(comptime Context: type) type {
+    return struct {
+        allocator: Allocator,
+        value: JsonValue,
+        context: Context,
+
+        const Self = @This();
+
+        /// 创建操作链
+        pub fn init(allocator: Allocator, value: JsonValue, context: Context) Self {
+            return Self{
+                .allocator = allocator,
+                .value = value,
+                .context = context,
+            };
+        }
+
+        /// 映射操作
+        pub fn map(self: *Self, f: *const fn (JsonValue) JsonValue) !*Self {
+            self.value = try mapJson(self.allocator, self.value, f);
+            return self;
+        }
+
+        /// 过滤操作（针对数组）
+        pub fn filter(self: *Self, predicate: *const fn (JsonValue) bool) !*Self {
+            self.value = try filterJson(self.allocator, self.value, predicate);
+            return self;
+        }
+
+        /// 获取路径值
+        pub fn at(self: *Self, path: []const u8) *Self {
+            if (JsonPath.get(self.value, path)) |v| {
+                self.value = v;
+            } else {
+                self.value = .null;
+            }
+            return self;
+        }
+
+        /// 提取最终值
+        pub fn unwrap(self: *Self) JsonValue {
+            return self.value;
+        }
+    };
+}
+
+/// 创建简单的JSON操作链（无上下文）
+pub fn jsonPipeline(allocator: Allocator, value: JsonValue) JsonPipeline(void) {
+    return JsonPipeline(void).init(allocator, value, {});
+}
+
+/// JSON合并操作
+pub fn mergeJson(allocator: Allocator, base: JsonValue, overlay: JsonValue) !JsonValue {
+    if (base != .object or overlay != .object) {
+        // 非对象直接返回overlay
+        return overlay;
+    }
+
+    var result = std.StringHashMap(JsonValue).init(allocator);
+
+    // 复制base的所有键值
+    var base_it = base.object.iterator();
+    while (base_it.next()) |entry| {
+        const key_copy = try allocator.dupe(u8, entry.key_ptr.*);
+        try result.put(key_copy, entry.value_ptr.*);
+    }
+
+    // 用overlay覆盖
+    var overlay_it = overlay.object.iterator();
+    while (overlay_it.next()) |entry| {
+        const key_copy = try allocator.dupe(u8, entry.key_ptr.*);
+        try result.put(key_copy, entry.value_ptr.*);
+    }
+
+    return JsonValue{ .object = result };
+}
+
+/// 提取JSON数组中的特定字段
+pub fn pluckJson(allocator: Allocator, value: JsonValue, field: []const u8) !JsonValue {
+    if (value != .array) {
+        return value;
+    }
+
+    var results = try std.ArrayList(JsonValue).initCapacity(allocator, value.array.len);
+    defer results.deinit(allocator);
+
+    for (value.array) |item| {
+        if (item == .object) {
+            if (item.object.get(field)) |field_value| {
+                try results.append(allocator, field_value);
+            }
+        }
+    }
+
+    const result_arr = try allocator.dupe(JsonValue, results.items);
+    return JsonValue{ .array = result_arr };
+}
+
+/// 按字段分组
+pub fn groupByJson(allocator: Allocator, value: JsonValue, field: []const u8) !JsonValue {
+    if (value != .array) {
+        return value;
+    }
+
+    var result = std.StringHashMap(JsonValue).init(allocator);
+
+    for (value.array) |item| {
+        if (item == .object) {
+            if (item.object.get(field)) |field_value| {
+                if (field_value == .string) {
+                    const key = field_value.string;
+                    if (result.get(key)) |existing| {
+                        // 已存在，添加到数组
+                        if (existing == .array) {
+                            var new_arr = try allocator.alloc(JsonValue, existing.array.len + 1);
+                            @memcpy(new_arr[0..existing.array.len], existing.array);
+                            new_arr[existing.array.len] = item;
+                            try result.put(key, JsonValue{ .array = new_arr });
+                        }
+                    } else {
+                        // 创建新数组
+                        const arr = try allocator.alloc(JsonValue, 1);
+                        arr[0] = item;
+                        const key_copy = try allocator.dupe(u8, key);
+                        try result.put(key_copy, JsonValue{ .array = arr });
+                    }
+                }
+            }
+        }
+    }
+
+    return JsonValue{ .object = result };
 }
 
 // ============ 内部实现 ============
@@ -583,4 +746,64 @@ test "JSON roundtrip" {
     // 简化检查：确保解析成功且序列化不为空
     try std.testing.expect(parsed == .object);
     try std.testing.expect(stringified.len > 0);
+}
+
+test "transformJson" {
+    // 创建一个简单的数组
+    var arr = [_]JsonValue{
+        JsonValue{ .int = 1 },
+        JsonValue{ .int = 2 },
+        JsonValue{ .int = 3 },
+    };
+    const input = JsonValue{ .array = &arr };
+
+    // 变换函数：将整数翻倍
+    const doubler = struct {
+        fn transform(_: Allocator, v: JsonValue) Allocator.Error!JsonValue {
+            if (v == .int) {
+                return JsonValue{ .int = v.int * 2 };
+            }
+            return v;
+        }
+    }.transform;
+
+    var result = try transformJson(std.testing.allocator, input, doubler);
+    defer result.deinit(std.testing.allocator);
+
+    try std.testing.expect(result == .array);
+    try std.testing.expectEqual(@as(usize, 3), result.array.len);
+    try std.testing.expectEqual(@as(i64, 2), result.array[0].int);
+    try std.testing.expectEqual(@as(i64, 4), result.array[1].int);
+    try std.testing.expectEqual(@as(i64, 6), result.array[2].int);
+}
+
+test "jsonPipeline" {
+    var obj = JsonValue.createObject(std.testing.allocator);
+    defer obj.deinit(std.testing.allocator);
+
+    const key = try std.testing.allocator.dupe(u8, "value");
+    try obj.object.put(key, JsonValue{ .int = 42 });
+
+    var pipeline = jsonPipeline(std.testing.allocator, obj);
+    _ = pipeline.at("value");
+    const result = pipeline.unwrap();
+
+    try std.testing.expect(result == .int);
+    try std.testing.expectEqual(@as(i64, 42), result.int);
+}
+
+test "pluckJson simple" {
+    // 使用简单的整数值来避免内存管理复杂性
+    var arr = [_]JsonValue{
+        JsonValue{ .int = 10 },
+        JsonValue{ .int = 20 },
+    };
+
+    const input = JsonValue{ .array = &arr };
+    // pluckJson 对非对象数组返回原值
+    var result = try pluckJson(std.testing.allocator, input, "name");
+    defer result.deinit(std.testing.allocator);
+
+    try std.testing.expect(result == .array);
+    try std.testing.expectEqual(@as(usize, 0), result.array.len); // 没有对象，所以结果为空
 }

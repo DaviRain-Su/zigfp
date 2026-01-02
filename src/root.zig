@@ -477,6 +477,67 @@ pub const saveConfig = config.saveConfig;
 pub const clearConfig = config.clearConfig;
 pub const getConfigOrDefault = config.getConfigOrDefault;
 
+// ============ v0.9.0 实用工具与集成 ============
+
+/// JSON - 函数式JSON处理
+pub const json = @import("json.zig");
+pub const JsonValue = json.JsonValue;
+pub const JsonPath = json.JsonPath;
+pub const JsonError = json.JsonError;
+pub const parseJson = json.parseJson;
+pub const stringifyJson = json.stringifyJson;
+pub const mapJson = json.mapJson;
+pub const filterJson = json.filterJson;
+pub const foldJson = json.foldJson;
+pub const transformJson = json.transformJson;
+pub const jsonPipeline = json.jsonPipeline;
+pub const mergeJson = json.mergeJson;
+pub const pluckJson = json.pluckJson;
+pub const groupByJson = json.groupByJson;
+
+/// HTTP - 函数式HTTP客户端
+pub const http = @import("http.zig");
+pub const HttpMethod = http.HttpMethod;
+pub const HttpHeader = http.HttpHeader;
+pub const HttpRequest = http.HttpRequest;
+pub const HttpResponse = http.HttpResponse;
+pub const HttpClient = http.HttpClient;
+pub const HttpError = http.HttpError;
+pub const HttpEffect = http.HttpEffect;
+pub const RetryConfig = http.RetryConfig;
+pub const RetryableHttpClient = http.RetryableHttpClient;
+pub const RequestBuilder = http.RequestBuilder;
+pub const MiddlewareChain = http.MiddlewareChain;
+pub const parseJsonResponse = http.parseJsonResponse;
+pub const httpGet = http.get;
+pub const httpPost = http.post;
+pub const httpPostJson = http.postJson;
+
+/// Codec - 编解码器框架
+pub const codec = @import("codec.zig");
+pub const CodecError = codec.CodecError;
+pub const CodecRegistry = codec.CodecRegistry;
+pub const JsonEncoder = codec.JsonEncoder;
+pub const JsonDecoder = codec.JsonDecoder;
+pub const BinaryEncoder = codec.BinaryEncoder;
+pub const BinaryDecoder = codec.BinaryDecoder;
+pub const Codec = codec.Codec;
+pub const CustomCodec = codec.CustomCodec;
+pub const Base64Codec = codec.Base64Codec;
+pub const HexCodec = codec.HexCodec;
+pub const encodeJson = codec.encodeJson;
+pub const decodeJson = codec.decodeJson;
+pub const encodeBinary = codec.encodeBinary;
+pub const decodeBinary = codec.decodeBinary;
+
+/// Validation - 函数式验证框架 (扩展)
+pub const validation_ext = @import("validation.zig");
+pub const ValidationPipeline = validation_ext.ValidationPipeline;
+pub const StringValidators = validation_ext.StringValidators;
+pub const NumberValidators = validation_ext.NumberValidators;
+pub const GenericValidators = validation_ext.GenericValidators;
+pub const ValidationCombinators = validation_ext.Combinators;
+
 // ============ 测试 ============
 
 test {

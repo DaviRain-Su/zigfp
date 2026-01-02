@@ -1,6 +1,6 @@
 # zigFP - 函数式编程工具库更新日志
 
-## [v0.9.0] - 2026-01-02 - 实用工具与集成
+## [v0.9.0] - 2026-01-02 - 实用工具与集成 ✅
 
 ### 🎯 新增功能
 
@@ -11,8 +11,12 @@
 - 实现 `JsonPath` 模块，支持点分隔路径的函数式 JSON 访问
 - 提供构造函数：`createNull`、`createBool`、`createInt`、`createFloat`、`createString`、`createArray`、`createObject`
 - 实现函数式操作：`mapJson`、`filterJson`、`foldJson`
+- **新增**: `transformJson` - 递归JSON结构变换
+- **新增**: `JsonPipeline` - 函数式组合管道
+- **新增**: `mergeJson` - 合并两个JSON对象
+- **新增**: `pluckJson` - 从对象数组中提取指定字段
+- **新增**: `groupByJson` - 按字段值分组数组元素
 - 完整的错误处理和内存管理
-- 8个测试用例，验证所有核心功能
 
 #### HTTP 客户端模块 (`src/http.zig`)
 - 实现类型安全的 HTTP 请求/响应类型 `HttpRequest`、`HttpResponse`
@@ -20,32 +24,44 @@
 - 支持所有标准 HTTP 方法（GET、POST、PUT、DELETE等）
 - 实现请求构建器模式，支持链式添加请求头
 - 提供便捷函数：`get()`、`post()`、`postJson()`
+- **新增**: `HttpEffect` - HTTP效果类型，集成到效果系统
+- **新增**: `RetryConfig` - 可配置的重试策略（指数退避）
+- **新增**: `RetryableHttpClient` - 带自动重试的HTTP客户端
+- **新增**: `RequestBuilder` - 流畅API构建请求
+- **新增**: `MiddlewareChain` - 请求/响应中间件链
+- **新增**: `parseJsonResponse` - JSON响应解析工具
 - 完整的错误处理和内存管理
-- 基于 Zig 0.15 HTTP API 实现
-- 4个测试用例，验证核心功能
+- 基于 Zig 0.15 HTTP API 实现（修复iterateHeaders兼容性）
 
 #### 编解码器框架模块 (`src/codec.zig`)
 - 实现 `JsonEncoder`/`JsonDecoder` 用于 JSON 序列化/反序列化
 - 实现 `BinaryEncoder`/`BinaryDecoder` 用于二进制序列化/反序列化
 - 支持基本类型：布尔值、整数、浮点数、结构体
 - 提供便捷函数：`encodeJson()`、`decodeJson()`、`encodeBinary()`、`decodeBinary()`
+- **新增**: `Codec(T)` - 泛型编解码器接口，支持compose/contramap/bimap
+- **新增**: `CustomCodec` - 自定义编解码器构建器
+- **新增**: `Base64Codec` - Base64编解码
+- **新增**: `HexCodec` - 十六进制编解码
 - 类型安全的设计，支持编译时类型检查
-- 3个测试用例，验证编解码功能
 
 #### 数据验证框架模块 (`src/validation.zig`)
 - 实现 `Validation(T, E)` Either类型用于验证结果
 - 实现泛型验证器类型 `Validator(T, E)`
 - 提供 `valid()`/`invalid()` 构造函数
-- 实现字符串验证器：`notEmpty()`
-- 实现数值验证器：`min()`、`max()`
-- 提供验证执行函数 `validate()`
+- **新增**: `StringValidators` - notEmpty, minLength, maxLength, lengthBetween, contains, startsWith, endsWith, isAlphanumeric, isNumeric, isEmail
+- **新增**: `NumberValidators` - min, max, inRange, positive, nonNegative
+- **新增**: `GenericValidators` - required, oneOf, equals, custom
+- **新增**: `Combinators` - andThen, orElse, not, all, any
+- **新增**: `ValidationPipeline` - 链式验证管道
 - 错误累积和内存安全设计
-- 3个测试用例，验证验证功能
 
-
+### 📊 统计数据
+- **新增测试**: 32个
+- **总测试数**: 551个（全部通过）
+- **内存安全**: 无泄漏检测
 
 ### 🔧 技术改进
-- 修复 Zig 0.15.x API 兼容性问题
+- 修复 Zig 0.15.x HTTP API 兼容性问题 (`response.head.iterateHeaders()`)
 - 确保无内存泄漏的测试验证
 - 遵循文档驱动开发流程
 

@@ -319,6 +319,248 @@ pub fn decodeBinary(allocator: Allocator, data: []const u8, comptime T: type) !T
     return decoder.decode(allocator, data, T);
 }
 
+// ============ 编解码器组合 ============
+
+/// 编解码器接口
+pub fn Codec(comptime T: type) type {
+    return struct {
+        encodeFn: *const fn (Allocator, T) CodecError![]u8,
+        decodeFn: *const fn (Allocator, []const u8) CodecError!T,
+
+        const Self = @This();
+
+        /// 编码
+        pub fn encode(self: Self, allocator: Allocator, value: T) ![]u8 {
+            return self.encodeFn(allocator, value);
+        }
+
+        /// 解码
+        pub fn decode(self: Self, allocator: Allocator, data: []const u8) !T {
+            return self.decodeFn(allocator, data);
+        }
+
+        /// 组合两个编解码器（编码后再编码）
+        pub fn compose(self: Self, other: Codec([]u8)) Codec(T) {
+            const S = struct {
+                var inner: Self = undefined;
+                var outer: Codec([]u8) = undefined;
+
+                fn composedEncode(allocator: Allocator, value: T) CodecError![]u8 {
+                    const intermediate = try inner.encode(allocator, value);
+                    defer allocator.free(intermediate);
+                    return outer.encode(allocator, intermediate);
+                }
+
+                fn composedDecode(allocator: Allocator, data: []const u8) CodecError!T {
+                    const intermediate = try outer.decode(allocator, data);
+                    defer allocator.free(intermediate);
+                    return inner.decode(allocator, intermediate);
+                }
+            };
+            S.inner = self;
+            S.outer = other;
+            return Codec(T){
+                .encodeFn = S.composedEncode,
+                .decodeFn = S.composedDecode,
+            };
+        }
+
+        /// 转换编解码器（使用映射函数）
+        pub fn contramap(
+            self: Self,
+            comptime U: type,
+            from: *const fn (U) T,
+            to: *const fn (T) U,
+        ) Codec(U) {
+            const S = struct {
+                var base: Self = undefined;
+                var fromFn: *const fn (U) T = undefined;
+                var toFn: *const fn (T) U = undefined;
+
+                fn encode(allocator: Allocator, value: U) CodecError![]u8 {
+                    return base.encode(allocator, fromFn(value));
+                }
+
+                fn decode(allocator: Allocator, data: []const u8) CodecError!U {
+                    const decoded = try base.decode(allocator, data);
+                    return toFn(decoded);
+                }
+            };
+            S.base = self;
+            S.fromFn = from;
+            S.toFn = to;
+            return Codec(U){
+                .encodeFn = S.encode,
+                .decodeFn = S.decode,
+            };
+        }
+    };
+}
+
+/// 自定义编解码器构建器
+pub fn CustomCodec(comptime T: type) type {
+    return struct {
+        encoder: ?*const fn (Allocator, T) CodecError![]u8,
+        decoder: ?*const fn (Allocator, []const u8) CodecError!T,
+
+        const Self = @This();
+
+        /// 创建空构建器
+        pub fn init() Self {
+            return Self{
+                .encoder = null,
+                .decoder = null,
+            };
+        }
+
+        /// 设置编码器
+        pub fn withEncoder(self: *Self, enc: *const fn (Allocator, T) CodecError![]u8) *Self {
+            self.encoder = enc;
+            return self;
+        }
+
+        /// 设置解码器
+        pub fn withDecoder(self: *Self, dec: *const fn (Allocator, []const u8) CodecError!T) *Self {
+            self.decoder = dec;
+            return self;
+        }
+
+        /// 构建编解码器
+        pub fn build(self: *Self) !Codec(T) {
+            if (self.encoder == null or self.decoder == null) {
+                return CodecError.UnsupportedType;
+            }
+            return Codec(T){
+                .encodeFn = self.encoder.?,
+                .decodeFn = self.decoder.?,
+            };
+        }
+    };
+}
+
+/// Base64编解码器
+pub const Base64Codec = struct {
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+    /// 创建Base64编解码器
+    pub fn codec() Codec([]u8) {
+        return Codec([]u8){
+            .encodeFn = encode,
+            .decodeFn = decode,
+        };
+    }
+
+    fn encode(allocator: Allocator, data: []u8) CodecError![]u8 {
+        const output_len = ((data.len + 2) / 3) * 4;
+        const output = allocator.alloc(u8, output_len) catch return CodecError.OutOfMemory;
+
+        var i: usize = 0;
+        var o: usize = 0;
+        while (i < data.len) : (o += 4) {
+            const n = @min(3, data.len - i);
+            var buf: [3]u8 = .{ 0, 0, 0 };
+            @memcpy(buf[0..n], data[i .. i + n]);
+
+            output[o] = alphabet[buf[0] >> 2];
+            output[o + 1] = alphabet[((buf[0] & 0x03) << 4) | (buf[1] >> 4)];
+            output[o + 2] = if (n > 1) alphabet[((buf[1] & 0x0f) << 2) | (buf[2] >> 6)] else '=';
+            output[o + 3] = if (n > 2) alphabet[buf[2] & 0x3f] else '=';
+
+            i += 3;
+        }
+
+        return output;
+    }
+
+    fn decode(allocator: Allocator, data: []const u8) CodecError![]u8 {
+        if (data.len % 4 != 0) {
+            return CodecError.InvalidData;
+        }
+
+        var padding: usize = 0;
+        if (data.len > 0 and data[data.len - 1] == '=') padding += 1;
+        if (data.len > 1 and data[data.len - 2] == '=') padding += 1;
+
+        const output_len = (data.len / 4) * 3 - padding;
+        const output = allocator.alloc(u8, output_len) catch return CodecError.OutOfMemory;
+
+        var i: usize = 0;
+        var o: usize = 0;
+        while (i < data.len) : (i += 4) {
+            const a = decodeChar(data[i]) catch return CodecError.InvalidData;
+            const b = decodeChar(data[i + 1]) catch return CodecError.InvalidData;
+            const c = if (data[i + 2] == '=') @as(u6, 0) else decodeChar(data[i + 2]) catch return CodecError.InvalidData;
+            const d = if (data[i + 3] == '=') @as(u6, 0) else decodeChar(data[i + 3]) catch return CodecError.InvalidData;
+
+            if (o < output_len) output[o] = (@as(u8, a) << 2) | (b >> 4);
+            o += 1;
+            if (o < output_len) output[o] = (@as(u8, b & 0x0f) << 4) | (c >> 2);
+            o += 1;
+            if (o < output_len) output[o] = (@as(u8, c & 0x03) << 6) | d;
+            o += 1;
+        }
+
+        return output;
+    }
+
+    fn decodeChar(c: u8) !u6 {
+        if (c >= 'A' and c <= 'Z') return @intCast(c - 'A');
+        if (c >= 'a' and c <= 'z') return @intCast(c - 'a' + 26);
+        if (c >= '0' and c <= '9') return @intCast(c - '0' + 52);
+        if (c == '+') return 62;
+        if (c == '/') return 63;
+        return error.InvalidChar;
+    }
+};
+
+/// Hex编解码器
+pub const HexCodec = struct {
+    const hex_chars = "0123456789abcdef";
+
+    /// 创建Hex编解码器
+    pub fn codec() Codec([]u8) {
+        return Codec([]u8){
+            .encodeFn = encode,
+            .decodeFn = decode,
+        };
+    }
+
+    fn encode(allocator: Allocator, data: []u8) CodecError![]u8 {
+        const output = allocator.alloc(u8, data.len * 2) catch return CodecError.OutOfMemory;
+
+        for (data, 0..) |byte, i| {
+            output[i * 2] = hex_chars[byte >> 4];
+            output[i * 2 + 1] = hex_chars[byte & 0x0f];
+        }
+
+        return output;
+    }
+
+    fn decode(allocator: Allocator, data: []const u8) CodecError![]u8 {
+        if (data.len % 2 != 0) {
+            return CodecError.InvalidData;
+        }
+
+        const output = allocator.alloc(u8, data.len / 2) catch return CodecError.OutOfMemory;
+
+        var i: usize = 0;
+        while (i < data.len) : (i += 2) {
+            const high = hexValue(data[i]) catch return CodecError.InvalidData;
+            const low = hexValue(data[i + 1]) catch return CodecError.InvalidData;
+            output[i / 2] = (@as(u8, high) << 4) | low;
+        }
+
+        return output;
+    }
+
+    fn hexValue(c: u8) !u4 {
+        if (c >= '0' and c <= '9') return @intCast(c - '0');
+        if (c >= 'a' and c <= 'f') return @intCast(c - 'a' + 10);
+        if (c >= 'A' and c <= 'F') return @intCast(c - 'A' + 10);
+        return error.InvalidHex;
+    }
+};
+
 // ============ 测试 ============
 
 test "JSON codec basic types" {
@@ -365,4 +607,62 @@ test "Binary codec basic types" {
     defer std.testing.allocator.free(encoded_float);
     const decoded_float = try decodeBinary(std.testing.allocator, encoded_float, f32);
     try std.testing.expect(decoded_float == 3.14);
+}
+
+test "HexCodec encode decode" {
+    var data = [_]u8{ 0xDE, 0xAD, 0xBE, 0xEF };
+    const hex_codec = HexCodec.codec();
+
+    const encoded = try hex_codec.encode(std.testing.allocator, &data);
+    defer std.testing.allocator.free(encoded);
+    try std.testing.expect(std.mem.eql(u8, encoded, "deadbeef"));
+
+    const decoded = try hex_codec.decode(std.testing.allocator, encoded);
+    defer std.testing.allocator.free(decoded);
+    try std.testing.expect(std.mem.eql(u8, decoded, &data));
+}
+
+test "Base64Codec encode decode" {
+    var data = [_]u8{ 'H', 'e', 'l', 'l', 'o' };
+    const b64_codec = Base64Codec.codec();
+
+    const encoded = try b64_codec.encode(std.testing.allocator, &data);
+    defer std.testing.allocator.free(encoded);
+    try std.testing.expect(std.mem.eql(u8, encoded, "SGVsbG8="));
+
+    const decoded = try b64_codec.decode(std.testing.allocator, encoded);
+    defer std.testing.allocator.free(decoded);
+    try std.testing.expect(std.mem.eql(u8, decoded, &data));
+}
+
+test "CustomCodec builder" {
+    const IntCodec = CustomCodec(i32);
+    var builder = IntCodec.init();
+
+    _ = builder.withEncoder(struct {
+        fn enc(allocator: Allocator, value: i32) CodecError![]u8 {
+            const result = allocator.alloc(u8, 4) catch return CodecError.OutOfMemory;
+            const bytes = std.mem.asBytes(&value);
+            @memcpy(result, bytes);
+            return result;
+        }
+    }.enc);
+
+    _ = builder.withDecoder(struct {
+        fn dec(_: Allocator, data: []const u8) CodecError!i32 {
+            if (data.len != 4) return CodecError.InvalidData;
+            var result: i32 = undefined;
+            const bytes = std.mem.asBytes(&result);
+            @memcpy(bytes, data[0..4]);
+            return result;
+        }
+    }.dec);
+
+    const codec = try builder.build();
+
+    const encoded = try codec.encode(std.testing.allocator, 42);
+    defer std.testing.allocator.free(encoded);
+
+    const decoded = try codec.decode(std.testing.allocator, encoded);
+    try std.testing.expectEqual(@as(i32, 42), decoded);
 }

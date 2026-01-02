@@ -191,7 +191,7 @@ pub const HttpClient = struct {
         const uri = std.Uri.parse(request.url) catch return HttpError.InvalidUrl;
 
         // 创建HTTP请求
-        const method = switch (request.method) {
+        const method: std.http.Method = switch (request.method) {
             .GET => .GET,
             .POST => .POST,
             .PUT => .PUT,
@@ -201,17 +201,24 @@ pub const HttpClient = struct {
             .OPTIONS => .OPTIONS,
         };
 
-        var req = self.client.request(method, uri, .{
-            .extra_headers = &.{
-                .{ .name = "User-Agent", .value = "zigFP/0.9.0" },
-            },
-        }) catch return HttpError.ConnectionFailed;
-        defer req.deinit();
+        // 构建 extra_headers
+        var extra_headers_buf: [32]std.http.Header = undefined;
+        var extra_header_count: usize = 1; // 预留 User-Agent
+
+        extra_headers_buf[0] = .{ .name = "User-Agent", .value = "zigFP/0.9.0" };
 
         // 添加自定义请求头
         for (request.headers.items) |header| {
-            req.headers.add(header.name, header.value) catch {};
+            if (extra_header_count < extra_headers_buf.len) {
+                extra_headers_buf[extra_header_count] = .{ .name = header.name, .value = header.value };
+                extra_header_count += 1;
+            }
         }
+
+        var req = self.client.request(method, uri, .{
+            .extra_headers = extra_headers_buf[0..extra_header_count],
+        }) catch return HttpError.ConnectionFailed;
+        defer req.deinit();
 
         // 发送请求体（如果有）
         if (request.body) |body| {
@@ -241,8 +248,8 @@ pub const HttpClient = struct {
         // 创建响应对象
         var http_response = try HttpResponse.init(self.allocator, @intFromEnum(response.head.status), "", body);
 
-        // 添加响应头
-        var header_it = response.iterateHeaders();
+        // 添加响应头 (Zig 0.15: iterateHeaders 在 head 上)
+        var header_it = response.head.iterateHeaders();
         while (header_it.next()) |header| {
             try http_response.addHeader(header.name, header.value);
         }
@@ -310,6 +317,297 @@ pub fn postJson(allocator: Allocator, url: []const u8, json_body: []const u8) !H
     return client.send(request);
 }
 
+// ============ HTTP Effect ============
+
+/// HTTP效果类型
+pub const HttpEffect = struct {
+    request: HttpRequest,
+
+    const Self = @This();
+
+    /// 创建GET效果
+    pub fn get(allocator: Allocator, url: []const u8) !Self {
+        return Self{
+            .request = try HttpRequest.get(allocator, url),
+        };
+    }
+
+    /// 创建POST效果
+    pub fn post(allocator: Allocator, url: []const u8, body: []const u8) !Self {
+        return Self{
+            .request = try HttpRequest.post(allocator, url, body),
+        };
+    }
+
+    /// 添加请求头
+    pub fn withHeader(self: *Self, name: []const u8, value: []const u8) !*Self {
+        try self.request.withHeader(name, value);
+        return self;
+    }
+
+    /// 设置超时（毫秒）- 存储在请求元数据中
+    pub fn withTimeout(self: *Self, timeout_ms: u64) *Self {
+        // 注意：Zig std.http.Client 不直接支持超时
+        // 这里我们可以存储超时值用于将来的实现
+        _ = timeout_ms;
+        return self;
+    }
+
+    /// 执行HTTP效果
+    pub fn run(self: *Self, allocator: Allocator) !HttpResponse {
+        var client = HttpClient.init(allocator);
+        defer client.deinit();
+        return client.send(self.request);
+    }
+
+    /// 销毁效果
+    pub fn deinit(self: *Self) void {
+        self.request.deinit();
+    }
+};
+
+/// 重试配置
+pub const RetryConfig = struct {
+    /// 最大重试次数
+    max_retries: u32 = 3,
+    /// 初始延迟（毫秒）
+    initial_delay_ms: u64 = 100,
+    /// 延迟倍数（指数退避）
+    backoff_multiplier: f32 = 2.0,
+    /// 最大延迟（毫秒）
+    max_delay_ms: u64 = 10000,
+    /// 可重试的状态码
+    retryable_status_codes: []const u16 = &[_]u16{ 429, 500, 502, 503, 504 },
+};
+
+/// 带重试的HTTP请求执行器
+pub const RetryableHttpClient = struct {
+    allocator: Allocator,
+    config: RetryConfig,
+
+    const Self = @This();
+
+    /// 创建可重试客户端
+    pub fn init(allocator: Allocator, config: RetryConfig) Self {
+        return Self{
+            .allocator = allocator,
+            .config = config,
+        };
+    }
+
+    /// 执行带重试的请求
+    pub fn execute(self: *Self, request: HttpRequest) !HttpResponse {
+        var client = HttpClient.init(self.allocator);
+        defer client.deinit();
+
+        var attempts: u32 = 0;
+        var delay_ms: u64 = self.config.initial_delay_ms;
+
+        while (attempts <= self.config.max_retries) {
+            const response = client.send(request) catch |err| {
+                attempts += 1;
+                if (attempts > self.config.max_retries) {
+                    return err;
+                }
+                // 等待后重试
+                std.time.sleep(delay_ms * std.time.ns_per_ms);
+                delay_ms = @min(
+                    @as(u64, @intFromFloat(@as(f32, @floatFromInt(delay_ms)) * self.config.backoff_multiplier)),
+                    self.config.max_delay_ms,
+                );
+                continue;
+            };
+
+            // 检查是否需要重试
+            var should_retry = false;
+            for (self.config.retryable_status_codes) |code| {
+                if (response.status_code == code) {
+                    should_retry = true;
+                    break;
+                }
+            }
+
+            if (should_retry and attempts < self.config.max_retries) {
+                attempts += 1;
+                std.time.sleep(delay_ms * std.time.ns_per_ms);
+                delay_ms = @min(
+                    @as(u64, @intFromFloat(@as(f32, @floatFromInt(delay_ms)) * self.config.backoff_multiplier)),
+                    self.config.max_delay_ms,
+                );
+                continue;
+            }
+
+            return response;
+        }
+
+        return HttpError.ConnectionFailed;
+    }
+};
+
+/// 解析JSON响应为JsonValue
+pub fn parseJsonResponse(allocator: Allocator, response: HttpResponse) !@import("json.zig").JsonValue {
+    const json = @import("json.zig");
+
+    if (!response.isSuccess()) {
+        return HttpError.InvalidResponse;
+    }
+
+    return json.parseJson(allocator, response.body);
+}
+
+/// 请求构建器 - 链式API
+pub const RequestBuilder = struct {
+    allocator: Allocator,
+    method: HttpMethod,
+    url: []const u8,
+    headers: std.ArrayList(HttpHeader),
+    body: ?[]const u8,
+    timeout_ms: ?u64,
+
+    const Self = @This();
+
+    /// 创建构建器
+    pub fn init(allocator: Allocator) !Self {
+        return Self{
+            .allocator = allocator,
+            .method = .GET,
+            .url = "",
+            .headers = try std.ArrayList(HttpHeader).initCapacity(allocator, 8),
+            .body = null,
+            .timeout_ms = null,
+        };
+    }
+
+    /// 销毁构建器
+    pub fn deinit(self: *Self) void {
+        for (self.headers.items) |header| {
+            self.allocator.free(header.name);
+            self.allocator.free(header.value);
+        }
+        self.headers.deinit(self.allocator);
+        if (self.url.len > 0) {
+            self.allocator.free(self.url);
+        }
+        if (self.body) |body| {
+            self.allocator.free(body);
+        }
+    }
+
+    /// 设置方法
+    pub fn setMethod(self: *Self, method: HttpMethod) *Self {
+        self.method = method;
+        return self;
+    }
+
+    /// 设置URL
+    pub fn setUrl(self: *Self, url: []const u8) !*Self {
+        if (self.url.len > 0) {
+            self.allocator.free(self.url);
+        }
+        self.url = try self.allocator.dupe(u8, url);
+        return self;
+    }
+
+    /// 添加请求头
+    pub fn addHeader(self: *Self, name: []const u8, value: []const u8) !*Self {
+        try self.headers.append(self.allocator, HttpHeader.init(
+            try self.allocator.dupe(u8, name),
+            try self.allocator.dupe(u8, value),
+        ));
+        return self;
+    }
+
+    /// 设置JSON Content-Type
+    pub fn json(self: *Self) !*Self {
+        return self.addHeader("Content-Type", "application/json");
+    }
+
+    /// 设置请求体
+    pub fn setBody(self: *Self, body: []const u8) !*Self {
+        if (self.body) |old_body| {
+            self.allocator.free(old_body);
+        }
+        self.body = try self.allocator.dupe(u8, body);
+        return self;
+    }
+
+    /// 设置超时
+    pub fn setTimeout(self: *Self, timeout_ms: u64) *Self {
+        self.timeout_ms = timeout_ms;
+        return self;
+    }
+
+    /// 构建请求
+    pub fn build(self: *Self) !HttpRequest {
+        var request = HttpRequest{
+            .allocator = self.allocator,
+            .method = self.method,
+            .url = try self.allocator.dupe(u8, self.url),
+            .headers = try std.ArrayList(HttpHeader).initCapacity(self.allocator, self.headers.items.len),
+            .body = if (self.body) |b| try self.allocator.dupe(u8, b) else null,
+        };
+
+        for (self.headers.items) |header| {
+            try request.headers.append(self.allocator, HttpHeader.init(
+                try self.allocator.dupe(u8, header.name),
+                try self.allocator.dupe(u8, header.value),
+            ));
+        }
+
+        return request;
+    }
+};
+
+/// HTTP中间件类型
+pub const Middleware = *const fn (*HttpRequest) HttpError!void;
+
+/// 中间件链
+pub const MiddlewareChain = struct {
+    middlewares: std.ArrayList(Middleware),
+    allocator: Allocator,
+
+    const Self = @This();
+
+    /// 创建中间件链
+    pub fn init(allocator: Allocator) !Self {
+        return Self{
+            .middlewares = try std.ArrayList(Middleware).initCapacity(allocator, 4),
+            .allocator = allocator,
+        };
+    }
+
+    /// 销毁中间件链
+    pub fn deinit(self: *Self) void {
+        self.middlewares.deinit(self.allocator);
+    }
+
+    /// 添加中间件
+    pub fn use(self: *Self, middleware: Middleware) !*Self {
+        try self.middlewares.append(self.allocator, middleware);
+        return self;
+    }
+
+    /// 执行中间件链
+    pub fn execute(self: *Self, request: *HttpRequest) !void {
+        for (self.middlewares.items) |middleware| {
+            try middleware(request);
+        }
+    }
+};
+
+/// 常用中间件 - 添加认证头
+pub fn authMiddleware(token: []const u8) Middleware {
+    const S = struct {
+        var stored_token: []const u8 = undefined;
+
+        fn apply(request: *HttpRequest) HttpError!void {
+            request.withHeader("Authorization", stored_token) catch return HttpError.OutOfMemory;
+        }
+    };
+    S.stored_token = token;
+    return S.apply;
+}
+
 // ============ 测试 ============
 
 test "HttpRequest creation" {
@@ -346,4 +644,52 @@ test "HttpMethod to string" {
     try std.testing.expect(std.mem.eql(u8, HttpMethod.POST.toString(), "POST"));
     try std.testing.expect(std.mem.eql(u8, HttpMethod.PUT.toString(), "PUT"));
     try std.testing.expect(std.mem.eql(u8, HttpMethod.DELETE.toString(), "DELETE"));
+}
+
+test "RequestBuilder" {
+    var builder = try RequestBuilder.init(std.testing.allocator);
+    defer builder.deinit();
+
+    _ = try builder.setUrl("https://example.com/api");
+    _ = builder.setMethod(.POST);
+    _ = try builder.addHeader("Accept", "application/json");
+    _ = try builder.json();
+    _ = try builder.setBody("{\"key\": \"value\"}");
+    _ = builder.setTimeout(5000);
+
+    var request = try builder.build();
+    defer request.deinit();
+
+    try std.testing.expect(request.method == .POST);
+    try std.testing.expect(std.mem.eql(u8, request.url, "https://example.com/api"));
+    try std.testing.expect(request.headers.items.len == 2);
+    try std.testing.expect(request.body != null);
+}
+
+test "HttpEffect creation" {
+    var effect = try HttpEffect.get(std.testing.allocator, "https://example.com");
+    defer effect.deinit();
+
+    try std.testing.expect(effect.request.method == .GET);
+}
+
+test "RetryConfig default" {
+    const config = RetryConfig{};
+    try std.testing.expectEqual(@as(u32, 3), config.max_retries);
+    try std.testing.expectEqual(@as(u64, 100), config.initial_delay_ms);
+}
+
+test "MiddlewareChain" {
+    var chain = try MiddlewareChain.init(std.testing.allocator);
+    defer chain.deinit();
+
+    // 添加一个简单的中间件
+    const add_header = struct {
+        fn apply(request: *HttpRequest) HttpError!void {
+            try request.withHeader("X-Test", "test-value");
+        }
+    }.apply;
+
+    _ = try chain.use(add_header);
+    try std.testing.expectEqual(@as(usize, 1), chain.middlewares.items.len);
 }
