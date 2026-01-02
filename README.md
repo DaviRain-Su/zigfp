@@ -94,6 +94,7 @@ const sum = fp.sumMonoid.concat(&numbers);  // 15
 | `Lens(S, A)` | 不可变数据更新 |
 | `Memoized(K, V)` | 函数记忆化 |
 | `Monoid(T)` | 可组合代数结构 |
+| `IO(T)` | 函数式 IO 操作 |
 
 ## 示例
 
@@ -202,6 +203,7 @@ zig build test
 - [Lens](docs/lens.md)
 - [Memoize](docs/memoize.md)
 - [Monoid](docs/monoid.md)
+- [IO](docs/io.md)
 
 ## Zig 版本
 

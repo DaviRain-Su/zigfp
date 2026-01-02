@@ -107,6 +107,19 @@ pub const productMonoidI32 = monoid.productMonoidI32;
 pub const maxMonoidI32 = monoid.maxMonoidI32;
 pub const minMonoidI32 = monoid.minMonoidI32;
 
+// ============ IO 模块 ============
+
+/// IO - 函数式 IO 操作
+pub const io = @import("io.zig");
+pub const IO = io.IO;
+pub const IOVoid = io.IOVoid;
+pub const Console = io.Console;
+pub const console = io.console;
+pub const putStrLn = io.putStrLn;
+pub const putStr = io.putStr;
+pub const getLine = io.getLine;
+pub const getContents = io.getContents;
+
 // ============ 测试 ============
 
 test {

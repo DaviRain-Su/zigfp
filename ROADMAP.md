@@ -32,7 +32,8 @@ src/
 ├── state.zig        # State Monad - 状态管理
 ├── lens.zig         # Lens - 不可变更新
 ├── memoize.zig      # 记忆化
-└── monoid.zig       # Monoid - 可组合代数结构
+├── monoid.zig       # Monoid - 可组合代数结构
+└── io.zig           # IO - 函数式 IO 操作
 ```
 
 ## 版本路线图
@@ -69,6 +70,7 @@ src/
 | `lens.zig` | ✅ | Lens(S, A) - 不可变数据更新 |
 | `memoize.zig` | ✅ | Memoized(K, V) - 函数记忆化 |
 | `monoid.zig` | ✅ | Monoid(T) - 可组合代数结构 |
+| `io.zig` | ✅ | IO(T) - 函数式 IO 操作 |
 
 #### 基础设施
 
@@ -104,6 +106,7 @@ src/
 | Lens | `lens` | `Monocle` | - | `Lens(S,A)` |
 | Memoize | `memoize` | - | - | `Memoized(K,V)` |
 | Monoid | `Monoid` | `Monoid` | - | `Monoid(T)` |
+| IO | `IO` | `IO` | - | `IO(T)` |
 
 ## 性能特性
 
