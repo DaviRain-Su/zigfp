@@ -113,6 +113,16 @@ const sum = fp.sumMonoid.concat(&numbers);  // 15
 | `Effect(E, A)` | Effect System - 代数效果 |
 | `Parser(T)` | Parser Combinators - 组合式解析器 |
 
+### 类型类抽象 (v0.4.0)
+
+| 模块 | 说明 |
+|------|------|
+| `OptionApplicative(A)` | Applicative Functor - liftA2, product |
+| `SliceFoldable(A)` | Foldable - foldl, foldr, sum, maximum |
+| `SliceTraversable(A)` | Traversable - traverse, sequence |
+| `FunctionArrow(A, B)` | Arrow - 函数抽象, 组合, 扇出 |
+| `Identity/Store/Env(A)` | Comonad - extract, extend |
+
 ## 示例
 
 ### Option 链式处理
@@ -227,6 +237,11 @@ zig build test
 - [Continuation](docs/cont.md)
 - [Effect System](docs/effect.md)
 - [Parser Combinators](docs/parser.md)
+- [Applicative](docs/applicative.md)
+- [Foldable](docs/foldable.md)
+- [Traversable](docs/traversable.md)
+- [Arrow](docs/arrow.md)
+- [Comonad](docs/comonad.md)
 
 ## Zig 版本
 

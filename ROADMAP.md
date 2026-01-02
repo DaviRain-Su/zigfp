@@ -39,7 +39,12 @@ src/
 ├── free.zig         # Free Monad + Trampoline
 ├── cont.zig         # Continuation Monad - CPS 风格
 ├── effect.zig       # Effect System - 代数效果
-└── parser.zig       # Parser Combinators - 组合式解析器
+├── parser.zig       # Parser Combinators - 组合式解析器
+├── applicative.zig  # Applicative Functor
+├── foldable.zig     # Foldable - 折叠操作
+├── traversable.zig  # Traversable - 效果遍历
+├── arrow.zig        # Arrow - 函数抽象
+└── comonad.zig      # Comonad - Monad 的对偶
 ```
 
 ## 版本路线图
@@ -105,15 +110,28 @@ src/
 | `effect.zig` | ✅ | Effect System - 代数效果、Reader/State/Error/Log |
 | `parser.zig` | ✅ | Parser Combinators - 组合式解析器 |
 
-### v0.4.0 - 未来计划
+### v0.4.0 - 类型类抽象 ✅
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `applicative.zig` | ⏳ | Applicative Functor |
-| `traversable.zig` | ⏳ | Traversable |
-| `foldable.zig` | ⏳ | Foldable |
-| `arrow.zig` | ⏳ | Arrow 类型 |
-| `comonad.zig` | ⏳ | Comonad |
+| `applicative.zig` | ✅ | Applicative Functor - Option/Result/List |
+| `foldable.zig` | ✅ | Foldable - 折叠操作 |
+| `traversable.zig` | ✅ | Traversable - 效果遍历 |
+| `arrow.zig` | ✅ | Arrow - 函数抽象 |
+| `comonad.zig` | ✅ | Comonad - Identity/NonEmpty/Store/Env/Traced |
+
+### v0.5.0 - 未来计划
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `bifunctor.zig` | ⏳ | Bifunctor - 双参数 Functor |
+| `profunctor.zig` | ⏳ | Profunctor - 逆变/协变 |
+| `optics.zig` | ⏳ | Prism/Iso/Affine (Lens 扩展) |
+| `stream.zig` | ⏳ | 惰性流 / 无限序列 |
+| `zipper.zig` | ⏳ | Zipper - 可导航数据结构 |
+
+> **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
+> 待官方稳定后可考虑添加异步抽象模块。
 
 ## 特性对照表
 
@@ -138,6 +156,11 @@ src/
 | Continuation | `Cont` | `Cont` | - | `Cont(R,A)` |
 | Effect | `Eff` | `ZIO` | - | `Effect(E,A)` |
 | Parser | `Parsec` | `FastParse` | `nom` | `Parser(T)` |
+| Applicative | `Applicative` | `Applicative` | - | `OptionApplicative` |
+| Foldable | `Foldable` | `Foldable` | - | `SliceFoldable` |
+| Traversable | `Traversable` | `Traverse` | - | `SliceTraversable` |
+| Arrow | `Arrow` | `Arrow` | - | `FunctionArrow` |
+| Comonad | `Comonad` | `Comonad` | - | `Identity/Store/Env` |
 
 ## 性能特性
 

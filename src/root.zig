@@ -201,6 +201,59 @@ pub const many1 = parser.many1;
 pub const ManyParser = parser.ManyParser;
 pub const Many1Parser = parser.Many1Parser;
 
+// ============ v0.4.0 类型类抽象 ============
+
+/// Applicative Functor - 介于 Functor 和 Monad 之间的抽象
+pub const applicative = @import("applicative.zig");
+pub const OptionApplicative = applicative.OptionApplicative;
+pub const ResultApplicative = applicative.ResultApplicative;
+pub const ListApplicative = applicative.ListApplicative;
+pub const liftA2Option = applicative.liftA2Option;
+pub const liftA3Option = applicative.liftA3Option;
+pub const liftA2Result = applicative.liftA2Result;
+
+/// Foldable - 可折叠结构
+pub const foldable = @import("foldable.zig");
+pub const SliceFoldable = foldable.SliceFoldable;
+pub const NumericFoldable = foldable.NumericFoldable;
+pub const OptionFoldable = foldable.OptionFoldable;
+pub const foldWithMonoid = foldable.foldWithMonoid;
+pub const foldLeft = foldable.foldLeft;
+pub const foldRight = foldable.foldRight;
+
+/// Traversable - 可遍历结构
+pub const traversable = @import("traversable.zig");
+pub const SliceTraversable = traversable.SliceTraversable;
+pub const OptionTraversable = traversable.OptionTraversable;
+pub const traverseSliceOption = traversable.traverseSliceOption;
+pub const sequenceSliceOption = traversable.sequenceSliceOption;
+pub const traverseSliceResult = traversable.traverseSliceResult;
+pub const sequenceSliceResult = traversable.sequenceSliceResult;
+
+/// Arrow - 计算的抽象
+pub const arrow = @import("arrow.zig");
+pub const FunctionArrow = arrow.FunctionArrow;
+pub const ComposedArrow = arrow.ComposedArrow;
+pub const FirstArrow = arrow.FirstArrow;
+pub const SecondArrow = arrow.SecondArrow;
+pub const SplitArrow = arrow.SplitArrow;
+pub const FanoutArrow = arrow.FanoutArrow;
+pub const Either = arrow.Either;
+pub const Pair = arrow.Pair;
+pub const arr = arrow.arr;
+pub const idArrow = arrow.idArrow;
+pub const constArrow = arrow.constArrow;
+pub const swap = arrow.swap;
+pub const dup = arrow.dup;
+
+/// Comonad - Monad 的对偶
+pub const comonad = @import("comonad.zig");
+pub const Identity = comonad.Identity;
+pub const NonEmpty = comonad.NonEmpty;
+pub const Store = comonad.Store;
+pub const Env = comonad.Env;
+pub const Traced = comonad.Traced;
+
 // ============ 测试 ============
 
 test {
