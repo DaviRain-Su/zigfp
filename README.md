@@ -19,7 +19,7 @@
 ```zig
 .dependencies = .{
     .zigfp = .{
-        .url = "https://github.com/your-repo/zigfp/archive/main.tar.gz",
+        .url = "https://github.com/DaviRain-Su/zigfp/archive/main.tar.gz",
     },
 },
 ```
