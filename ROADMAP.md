@@ -12,7 +12,7 @@
 - **类型安全**: 利用 Zig 类型系统防止运行时错误
 - **零成本抽象**: 编译时展开，无运行时开销
 - **Monad 支持**: Option, Result, Reader, Writer, State
-- **函数组合**: compose, pipe, curry
+- **函数组合**: compose, pipe, partial application
 - **不可变更新**: Lens
 - **惰性求值**: Lazy
 - **记忆化**: Memoize
@@ -25,7 +25,7 @@ src/
 ├── option.zig       # Option/Maybe - 安全空值处理
 ├── result.zig       # Result/Either - 错误处理
 ├── lazy.zig         # 惰性求值
-├── function.zig     # compose, curry, identity, flip
+├── function.zig     # compose, identity, flip
 ├── pipe.zig         # 管道操作
 ├── reader.zig       # Reader Monad - 依赖注入
 ├── writer.zig       # Writer Monad - 日志累积
@@ -37,47 +37,49 @@ src/
 
 ## 版本路线图
 
-### v0.1.0 - 完整函数式工具库 🔨
+### v0.1.0 - 完整函数式工具库 ✅
 
 #### 核心数据类型
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `option.zig` | ⏳ | Option(T) - Maybe 语义，安全空值处理 |
-| `result.zig` | ⏳ | Result(T, E) - 错误处理，ok/err 语义 |
-| `lazy.zig` | ⏳ | Lazy(T) - 惰性求值，记忆化 |
+| `option.zig` | ✅ | Option(T) - Maybe 语义，安全空值处理 |
+| `result.zig` | ✅ | Result(T, E) - 错误处理，ok/err 语义 |
+| `lazy.zig` | ✅ | Lazy(T) - 惰性求值，记忆化 |
 
 #### 函数工具
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `function.zig` | ⏳ | compose, curry2, identity, flip, constant |
-| `pipe.zig` | ⏳ | Pipe(T) - 管道操作，链式调用 |
+| `function.zig` | ✅ | compose, identity, flip, partial |
+| `pipe.zig` | ✅ | Pipe(T) - 管道操作，链式调用 |
 
 #### Monad 家族
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `reader.zig` | ⏳ | Reader(Env, T) - 依赖注入模式 |
-| `writer.zig` | ⏳ | Writer(W, T) - 日志/累积模式 |
-| `state.zig` | ⏳ | State(S, T) - 状态管理 |
+| `reader.zig` | ✅ | Reader(Env, T) - 依赖注入模式 |
+| `writer.zig` | ✅ | Writer(W, T) - 日志/累积模式 |
+| `state.zig` | ✅ | State(S, T) - 状态管理 |
 
 #### 高级抽象
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `lens.zig` | ⏳ | Lens(S, A) - 不可变数据更新 |
-| `memoize.zig` | ⏳ | Memoized(F) - 函数记忆化 |
-| `monoid.zig` | ⏳ | Monoid(T) - 可组合代数结构 |
+| `lens.zig` | ✅ | Lens(S, A) - 不可变数据更新 |
+| `memoize.zig` | ✅ | Memoized(K, V) - 函数记忆化 |
+| `monoid.zig` | ✅ | Monoid(T) - 可组合代数结构 |
 
 #### 基础设施
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
-| 单元测试 | ⏳ | 每个模块完整测试 |
-| 类型类法则测试 | ⏳ | Functor/Monad 法则验证 |
-| 文档 | ⏳ | API 文档和使用示例 |
-| README | ⏳ | 用户入口文档 |
+| 单元测试 | ✅ | 每个模块完整测试 |
+| Functor/Monad 法则测试 | ✅ | Option, Result 法则验证 |
+| Lens 法则测试 | ✅ | GetPut, PutGet, PutPut |
+| Monoid 法则测试 | ✅ | Identity, Associativity |
+| 文档 | ✅ | 每个模块 API 文档 |
+| README | ✅ | 用户入口文档 |
 
 ### v0.2.0 - 扩展（计划中）
 
@@ -95,13 +97,12 @@ src/
 | Result | `Either` | `Either` | `Result` | `Result(T,E)` |
 | 函数组合 | `.` | `compose` | - | `compose()` |
 | 管道 | `&` | `\|>` | - | `Pipe(T)` |
-| 柯里化 | 默认 | `.curried` | - | `curry2()` |
 | 惰性 | 默认 | `lazy` | - | `Lazy(T)` |
 | Reader | `Reader` | `Reader` | - | `Reader(E,T)` |
 | Writer | `Writer` | `Writer` | - | `Writer(W,T)` |
 | State | `State` | `State` | - | `State(S,T)` |
 | Lens | `lens` | `Monocle` | - | `Lens(S,A)` |
-| Memoize | `memoize` | - | - | `memoize()` |
+| Memoize | `memoize` | - | - | `Memoized(K,V)` |
 | Monoid | `Monoid` | `Monoid` | - | `Monoid(T)` |
 
 ## 性能特性
