@@ -158,15 +158,15 @@ src/
 |------|------|------|
 | `benchmark.zig` | 🔄 | 性能基准测试框架 - 各抽象性能对比 |
 | `async.zig` | 🚀 | 异步抽象 (未来实现) - Future/Promise/Async Monad |
-| `parallel.zig` | ⏳ | 并行计算抽象 - Par Monad/并行Traversable |
+| `parallel.zig` | ✅ | 并行计算抽象 - Par Monad/并行Traversable |
 | `effect.zig` | ✅ | 扩展Effect System - FileSystem效果完成 |
 
 ### v0.9.0 - 实用工具与集成
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `json.zig` | ⏳ | JSON 处理 - 函数式JSON编解码 |
-| `http.zig` | ⏳ | HTTP客户端 - 函数式HTTP抽象 |
+| `json.zig` | ✅ | JSON 处理 - 函数式JSON编解码 |
+| `http.zig` | ✅ | HTTP客户端 - 函数式HTTP抽象 |
 | `codec.zig` | ⏳ | 编解码器 - 序列化/反序列化 |
 | `validation.zig` | ⏳ | 数据验证 - 组合式验证器 |
 

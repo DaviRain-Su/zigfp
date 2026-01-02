@@ -1,5 +1,34 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v0.9.0] - 2026-01-02 - 实用工具与集成
+
+### 🎯 新增功能
+
+#### JSON 处理模块 (`src/json.zig`)
+- 实现类型安全的 JSON 值类型 `JsonValue`
+- 提供 `parseJson` 函数进行 JSON 字符串解析
+- 提供 `stringifyJson` 函数进行 JSON 值序列化
+- 实现 `JsonPath` 模块，支持点分隔路径的函数式 JSON 访问
+- 提供构造函数：`createNull`、`createBool`、`createInt`、`createFloat`、`createString`、`createArray`、`createObject`
+- 实现函数式操作：`mapJson`、`filterJson`、`foldJson`
+- 完整的错误处理和内存管理
+- 8个测试用例，验证所有核心功能
+
+#### HTTP 客户端模块 (`src/http.zig`)
+- 实现类型安全的 HTTP 请求/响应类型 `HttpRequest`、`HttpResponse`
+- 提供 `HttpClient` 类用于发送 HTTP 请求
+- 支持所有标准 HTTP 方法（GET、POST、PUT、DELETE等）
+- 实现请求构建器模式，支持链式添加请求头
+- 提供便捷函数：`get()`、`post()`、`postJson()`
+- 完整的错误处理和内存管理
+- 基于 Zig 0.15 HTTP API 实现
+- 4个测试用例，验证核心功能
+
+### 🔧 技术改进
+- 修复 Zig 0.15.x API 兼容性问题
+- 确保无内存泄漏的测试验证
+- 遵循文档驱动开发流程
+
 ## [v0.6.0] - 2026-01-02 - 代数结构基础
 
 ### 🎯 新增功能

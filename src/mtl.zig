@@ -450,9 +450,15 @@ pub fn WriterT(comptime M: type, comptime W: type, comptime A: type) type {
                         fn mapFn(next_result: struct { A, W }) struct { A, W } {
                             const b = next_result[0];
                             const w2 = next_result[1];
-                            // 简化实现：保留第一个日志
-                            const combined_log = w1;
-                            _ = w2;
+                            // 正确组合两个日志（假设W是字符串类型）
+                            const combined_log = if (w1.len == 0) w2 else if (w2.len == 0) w1 else blk: {
+                                var result = std.ArrayList(u8).initCapacity(std.heap.page_allocator, w1.len + w2.len + 1) catch unreachable;
+                                defer result.deinit();
+                                result.appendSliceAssumeCapacity(w1);
+                                result.appendSliceAssumeCapacity("\n");
+                                result.appendSliceAssumeCapacity(w2);
+                                break :blk result.toOwnedSlice() catch unreachable;
+                            };
                             return .{ b, combined_log };
                         }
                     }.mapFn);

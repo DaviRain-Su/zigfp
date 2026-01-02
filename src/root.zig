@@ -397,6 +397,11 @@ pub const readFile = file_system.readFile;
 pub const writeFile = file_system.writeFile;
 pub const fileExists = file_system.fileExists;
 
+/// Parallel - 并行计算抽象
+pub const parallel = @import("parallel.zig");
+pub const parMap = parallel.parMap;
+pub const parFilter = parallel.parFilter;
+
 // ============ 测试 ============
 
 test {

@@ -215,8 +215,33 @@ fn realHandleImpl(op: FileOp) FileResult {
             };
             defer dir.close();
 
-            // 简化实现：只返回目录存在确认
-            return FileResult{ .success = "directory exists" };
+            // 实现真实的目录列举功能
+            var buffer = std.ArrayList(u8).initCapacity(data.allocator, 1024) catch |err| {
+                return FileResult{ .io_error = @errorName(err) };
+            };
+            defer buffer.deinit(data.allocator);
+
+            var iter = dir.iterate();
+            var first = true;
+            while (iter.next() catch |err| {
+                return FileResult{ .io_error = @errorName(err) };
+            }) |entry| {
+                if (!first) {
+                    buffer.appendSlice(data.allocator, "\n") catch |err| {
+                        return FileResult{ .io_error = @errorName(err) };
+                    };
+                }
+                first = false;
+
+                buffer.appendSlice(data.allocator, entry.name) catch |err| {
+                    return FileResult{ .io_error = @errorName(err) };
+                };
+            }
+
+            const result = buffer.toOwnedSlice(data.allocator) catch |err| {
+                return FileResult{ .io_error = @errorName(err) };
+            };
+            return FileResult{ .success = result };
         },
     };
 }
@@ -259,19 +284,18 @@ test "Mock FileSystem Handler" {
     try std.testing.expect(result == .success);
 }
 
-// TODO: Fix file exists test - need to debug path resolution
-// test "Real FileSystem Handler - file exists" {
-//     const handler = realFileSystemHandler();
+test "Real FileSystem Handler - file exists" {
+    const handler = realFileSystemHandler();
 
-//     // 测试一个肯定存在的文件，使用绝对路径
-//     var buf: [1024]u8 = undefined;
-//     const cwd = std.fs.selfExePath(buf[0..1024]) catch return;
-//     const dir_path = std.fs.path.dirname(cwd) orelse return;
-//     const file_path = try std.fs.path.join(std.testing.allocator, &[_][]const u8{ dir_path, "src", "file_system.zig" });
-//     defer std.testing.allocator.free(file_path);
+    // 测试一个肯定存在的文件，使用绝对路径
+    const cwd = std.fs.selfExePathAlloc(std.testing.allocator) catch return error.SkipZigTest;
+    defer std.testing.allocator.free(cwd);
+    const dir_path = std.fs.path.dirname(cwd) orelse return error.SkipZigTest;
+    const file_path = std.fs.path.join(std.testing.allocator, &[_][]const u8{ dir_path, "src", "file_system.zig" }) catch return error.SkipZigTest;
+    defer std.testing.allocator.free(file_path);
 
-//     const op = FileOp{ .file_exists = .{ .path = file_path } };
-//     const result = handler.handleFn(op);
-//     try std.testing.expect(result == .success);
-//     try std.testing.expect(std.mem.eql(u8, result.success, "true"));
-// }
+    const op = FileOp{ .file_exists = .{ .path = file_path } };
+    const result = handler.handleFn(op);
+    try std.testing.expect(result == .success);
+    try std.testing.expect(std.mem.eql(u8, result.success, "true"));
+}
