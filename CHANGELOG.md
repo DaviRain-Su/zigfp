@@ -1,5 +1,90 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.9.0] - 2026-01-02 - 数据结构增强 ✅
+
+### 🎯 新增功能
+
+#### NonEmptyList - `src/data/non_empty.zig`
+
+非空列表类型，保证列表至少有一个元素：
+
+- **构造函数**: `singleton`, `init`, `fromSlice`, `fromSliceAlloc`
+- **访问器**: `head`, `tail`, `last`, `get`, `len`, `toSlice`
+- **添加操作**: `cons` (头部), `snoc` (尾部), `append`, `reverse`
+- **函数式操作**: `map`, `foldl`, `foldl1`, `foldr`, `foldr1`
+- **查询操作**: `filter`, `forEach`, `all`, `any`, `find`
+
+```zig
+// 创建非空列表
+const nel = NonEmptyList(i32).singleton(allocator, 1);
+const nel2 = try nel.snoc(allocator, 2);  // [1, 2]
+
+// 函数式操作
+const doubled = try nel.map(allocator, i32, double);
+const sum = nel.foldl1(add);  // 不需要初始值
+```
+
+#### These - `src/data/these.zig`
+
+表示"这个"、"那个"或"两者都有"的联合类型：
+
+- **构造函数**: `This`, `That`, `Both`
+- **类型检查**: `isThis`, `isThat`, `isBoth`
+- **访问器**: `getThis`, `getThat`, `getBoth`
+- **映射**: `mapThis`, `mapThat`, `bimap`, `fold`
+- **转换**: `mergeWith`, `swap`, `thisOr`, `thatOr`
+- **互转**: `fromResult`, `toOptionPair`, `fromOptions`
+
+```zig
+// 创建 These 值
+const this = These(i32, []const u8).This(42);
+const that = These(i32, []const u8).That("hello");
+const both = These(i32, []const u8).Both(42, "hello");
+
+// 函数式操作
+const mapped = both.bimap(double, toUpper);
+const result = both.fold(showInt, showStr, showBoth);
+```
+
+#### Validation 增强 - `src/core/validation.zig`
+
+新增便捷函数：
+
+- **`invalidOne`** - 从单个错误创建无效验证
+- **`mapValidation`** - 映射有效值
+- **`flatMapValidation`** - 扁平映射验证
+- **`fromOption`** - 从 Option 转换为 Validation
+- **`fromResult`** - 从 Result 转换为 Validation
+- **`toResult`** - 从 Validation 转换为 Result
+- **`ensure`** - 确保条件成立，否则返回错误
+
+```zig
+// 从 Option 创建 Validation
+const v = try validationFromOption(i32, []const u8, opt, allocator, "missing value");
+
+// 确保条件
+const v2 = try ensureValidation(i32, []const u8, v, allocator, isPositive, "must be positive");
+
+// 转换为 Result
+const result = validationToResult(i32, []const u8, v);
+```
+
+### 📦 导出更新
+
+- `root.zig` 新增导出：
+  - Data: NonEmptyList, nonEmptyFromArray, These, fromOptions
+  - Validation: invalidOne, mapValidation, flatMapValidation, validationFromOption, validationFromResult, validationToResult, ensureValidation
+- `data/mod.zig` 导出 NonEmptyList, These 及相关函数
+- `core/mod.zig` 导出所有 Validation 增强函数
+
+### 📊 测试统计
+
+- 新增 35+ 个测试
+- 总测试数：872 tests
+- 所有测试通过，无内存泄漏
+
+---
+
 ## [v1.8.0] - 2026-01-02 - 序列工具与 Do-Notation ✅
 
 ### 🎯 新增功能

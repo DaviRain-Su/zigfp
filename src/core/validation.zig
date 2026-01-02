@@ -62,6 +62,107 @@ pub fn invalid(T: type, E: type, errors: []E) Validation(T, E) {
     return Validation(T, E){ .invalid = errors };
 }
 
+/// 从单个错误创建失败结果
+pub fn invalidOne(T: type, E: type, allocator: std.mem.Allocator, err: E) !Validation(T, E) {
+    const errors = try allocator.alloc(E, 1);
+    errors[0] = err;
+    return Validation(T, E){ .invalid = errors };
+}
+
+// ============ Validation 扩展方法 ============
+
+/// Validation 的 map 操作
+pub fn mapValidation(
+    comptime T: type,
+    comptime U: type,
+    comptime E: type,
+    v: Validation(T, E),
+    f: *const fn (T) U,
+) Validation(U, E) {
+    return switch (v) {
+        .valid => |val| Validation(U, E){ .valid = f(val) },
+        .invalid => |errs| Validation(U, E){ .invalid = errs },
+    };
+}
+
+/// Validation 的 flatMap/andThen 操作
+pub fn flatMapValidation(
+    comptime T: type,
+    comptime U: type,
+    comptime E: type,
+    v: Validation(T, E),
+    allocator: std.mem.Allocator,
+    f: *const fn (T, std.mem.Allocator) anyerror!Validation(U, E),
+) !Validation(U, E) {
+    return switch (v) {
+        .valid => |val| try f(val, allocator),
+        .invalid => |errs| Validation(U, E){ .invalid = errs },
+    };
+}
+
+/// 从 Option 创建 Validation
+pub fn fromOption(
+    comptime T: type,
+    comptime E: type,
+    opt: @import("option.zig").Option(T),
+    allocator: std.mem.Allocator,
+    err: E,
+) !Validation(T, E) {
+    return switch (opt) {
+        .some => |val| valid(T, E, val),
+        .none => try invalidOne(T, E, allocator, err),
+    };
+}
+
+/// 从 Result 创建 Validation
+pub fn fromResult(
+    comptime T: type,
+    comptime E: type,
+    comptime RE: type,
+    res: @import("result.zig").Result(T, RE),
+    allocator: std.mem.Allocator,
+    errMap: *const fn (RE) E,
+) !Validation(T, E) {
+    return switch (res) {
+        .ok => |val| valid(T, E, val),
+        .err => |e| try invalidOne(T, E, allocator, errMap(e)),
+    };
+}
+
+/// 将 Validation 转换为 Result
+pub fn toResult(
+    comptime T: type,
+    comptime E: type,
+    v: Validation(T, E),
+) @import("result.zig").Result(T, []E) {
+    const Result = @import("result.zig").Result;
+    return switch (v) {
+        .valid => |val| Result(T, []E).Ok(val),
+        .invalid => |errs| Result(T, []E).Err(errs),
+    };
+}
+
+/// 确保条件成立，否则返回错误
+pub fn ensure(
+    comptime T: type,
+    comptime E: type,
+    v: Validation(T, E),
+    allocator: std.mem.Allocator,
+    predicate: *const fn (T) bool,
+    err: E,
+) !Validation(T, E) {
+    return switch (v) {
+        .valid => |val| {
+            if (predicate(val)) {
+                return v;
+            } else {
+                return try invalidOne(T, E, allocator, err);
+            }
+        },
+        .invalid => v,
+    };
+}
+
 /// 验证器函数类型
 pub fn Validator(T: type, E: type) type {
     return *const fn (value: T, allocator: Allocator) ValidationError!Validation(T, E);
@@ -888,4 +989,78 @@ test "ValidationPipeline" {
     try std.testing.expect(result2.isInvalid());
     // 累积错误应该有2个
     try std.testing.expectEqual(@as(usize, 2), result2.unwrapErr().len);
+}
+
+test "mapValidation" {
+    const v1 = valid(i32, []const u8, 21);
+    const v2 = mapValidation(i32, i32, []const u8, v1, struct {
+        fn f(x: i32) i32 {
+            return x * 2;
+        }
+    }.f);
+    try std.testing.expect(v2.isValid());
+    try std.testing.expectEqual(@as(i32, 42), v2.unwrap());
+
+    const errs = try std.testing.allocator.dupe([]const u8, &[_][]const u8{"error"});
+    const v3 = invalid(i32, []const u8, errs);
+    var v4 = mapValidation(i32, i32, []const u8, v3, struct {
+        fn f(x: i32) i32 {
+            return x * 2;
+        }
+    }.f);
+    defer v4.deinit(std.testing.allocator);
+    try std.testing.expect(v4.isInvalid());
+}
+
+test "invalidOne" {
+    var v = try invalidOne(i32, []const u8, std.testing.allocator, "single error");
+    defer v.deinit(std.testing.allocator);
+    try std.testing.expect(v.isInvalid());
+    try std.testing.expectEqual(@as(usize, 1), v.unwrapErr().len);
+}
+
+test "toResult" {
+    const v1 = valid(i32, []const u8, 42);
+    const r1 = toResult(i32, []const u8, v1);
+    try std.testing.expect(r1.isOk());
+    try std.testing.expectEqual(@as(i32, 42), r1.unwrap());
+
+    const errs = try std.testing.allocator.dupe([]const u8, &[_][]const u8{"error"});
+    const v2 = invalid(i32, []const u8, errs);
+    const r2 = toResult(i32, []const u8, v2);
+    try std.testing.expect(r2.isErr());
+    std.testing.allocator.free(r2.unwrapErr());
+}
+
+test "fromOption" {
+    const Option = @import("option.zig").Option;
+
+    const some = Option(i32).Some(42);
+    const v1 = try fromOption(i32, []const u8, some, std.testing.allocator, "missing value");
+    try std.testing.expect(v1.isValid());
+    try std.testing.expectEqual(@as(i32, 42), v1.unwrap());
+
+    const none_ = Option(i32).None();
+    var v2 = try fromOption(i32, []const u8, none_, std.testing.allocator, "missing value");
+    defer v2.deinit(std.testing.allocator);
+    try std.testing.expect(v2.isInvalid());
+}
+
+test "ensure" {
+    const v1 = valid(i32, []const u8, 42);
+    const v2 = try ensure(i32, []const u8, v1, std.testing.allocator, struct {
+        fn f(x: i32) bool {
+            return x > 0;
+        }
+    }.f, "must be positive");
+    try std.testing.expect(v2.isValid());
+
+    const v3 = valid(i32, []const u8, -5);
+    var v4 = try ensure(i32, []const u8, v3, std.testing.allocator, struct {
+        fn f(x: i32) bool {
+            return x > 0;
+        }
+    }.f, "must be positive");
+    defer v4.deinit(std.testing.allocator);
+    try std.testing.expect(v4.isInvalid());
 }

@@ -76,6 +76,13 @@ pub const Lazy = core.Lazy;
 pub const Validation = core.Validation;
 pub const valid = core.valid;
 pub const invalid = core.invalid;
+pub const invalidOne = core.invalidOne;
+pub const mapValidation = core.mapValidation;
+pub const flatMapValidation = core.flatMapValidation;
+pub const validationFromOption = core.validationFromOption;
+pub const validationFromResult = core.validationFromResult;
+pub const validationToResult = core.validationToResult;
+pub const ensureValidation = core.ensureValidation;
 
 // Function
 pub const compose = function.compose;
@@ -164,6 +171,14 @@ pub const reverse = data.reverse;
 pub const takeLast = data.takeLast;
 pub const dropLast = data.dropLast;
 pub const SequenceError = data.SequenceError;
+
+// Data - NonEmptyList
+pub const NonEmptyList = data.NonEmptyList;
+pub const nonEmptyFromArray = data.nonEmptyFromArray;
+
+// Data - These
+pub const These = data.These;
+pub const fromOptions = data.fromOptions;
 
 // Optics
 pub const Lens = optics.Lens;

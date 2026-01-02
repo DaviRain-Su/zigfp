@@ -350,6 +350,18 @@ src/
 | State 增强 | ✅ | gets、putValue、modifyGet 函数 |
 | 测试验证 | ✅ | 836 tests 全部通过 |
 
+### v1.9.0 - 数据结构增强 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| `non_empty.zig` | ✅ | NonEmptyList - 保证非空的列表类型 |
+| `these.zig` | ✅ | These - This/That/Both 联合类型 |
+| Validation 增强 | ✅ | invalidOne、mapValidation、flatMapValidation、ensure、fromOption/Result、toResult |
+| data/mod.zig 导出 | ✅ | NonEmptyList、These 及辅助函数 |
+| core/mod.zig 导出 | ✅ | Validation 增强函数 |
+| root.zig 导出 | ✅ | 所有新类型和函数 |
+| 测试验证 | ✅ | 872 tests 全部通过 |
+
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 

@@ -15,6 +15,8 @@ pub const iterator = @import("iterator.zig");
 pub const arrow = @import("arrow.zig");
 pub const comonad = @import("comonad.zig");
 pub const sequence = @import("sequence.zig");
+pub const non_empty = @import("non_empty.zig");
+pub const these = @import("these.zig");
 
 // ============ Stream ============
 pub const StreamType = stream.Stream;
@@ -97,6 +99,14 @@ pub const reverse = sequence.reverse;
 pub const takeLast = sequence.takeLast;
 pub const dropLast = sequence.dropLast;
 pub const SequenceError = sequence.SequenceError;
+
+// ============ NonEmptyList ============
+pub const NonEmptyList = non_empty.NonEmptyList;
+pub const nonEmptyFromArray = non_empty.nonEmptyFromArray;
+
+// ============ These ============
+pub const These = these.These;
+pub const fromOptions = these.fromOptions;
 
 test {
     std.testing.refAllDecls(@This());
