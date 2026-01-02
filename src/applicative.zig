@@ -21,24 +21,24 @@ pub fn OptionApplicative(comptime A: type) type {
     return struct {
         const Self = @This();
         pub const Option = union(enum) {
-            some_val: A,
-            none_val: void,
+            some: A,
+            none: void,
 
             /// 判断是否有值
             pub fn isSome(self: @This()) bool {
-                return self == .some_val;
+                return self == .some;
             }
 
             /// 判断是否为空
             pub fn isNone(self: @This()) bool {
-                return self == .none_val;
+                return self == .none;
             }
 
             /// 获取值
             pub fn getValue(self: @This()) ?A {
                 return switch (self) {
-                    .some_val => |v| v,
-                    .none_val => null,
+                    .some => |v| v,
+                    .none => null,
                 };
             }
         };
@@ -47,19 +47,19 @@ pub fn OptionApplicative(comptime A: type) type {
 
         /// pure: 将值提升到 Option 上下文
         pub fn pure(value: A) Option {
-            return .{ .some_val = value };
+            return .{ .some = value };
         }
 
         /// none: 创建空值
         pub fn none() Option {
-            return .{ .none_val = {} };
+            return .{ .none = {} };
         }
 
         /// map: Functor 操作
         pub fn map(opt: Option, comptime B: type, f: *const fn (A) B) OptionApplicative(B).Option {
             return switch (opt) {
-                .some_val => |v| OptionApplicative(B).pure(f(v)),
-                .none_val => OptionApplicative(B).none(),
+                .some => |v| OptionApplicative(B).pure(f(v)),
+                .none => OptionApplicative(B).none(),
             };
         }
 
@@ -67,15 +67,15 @@ pub fn OptionApplicative(comptime A: type) type {
         /// Option(A -> B) -> Option(A) -> Option(B)
         pub fn ap(
             comptime B: type,
-            optF: OptionApplicative(*const fn (A) B).Option,
-            optA: Option,
-        ) OptionApplicative(B).Option {
+            optF: Option(*const fn (A) B),
+            optA: Option(A),
+        ) Option(B) {
             return switch (optF) {
-                .some_val => |f| switch (optA) {
-                    .some_val => |a| OptionApplicative(B).pure(f(a)),
-                    .none_val => OptionApplicative(B).none(),
+                .some => |f| switch (optA) {
+                    .some => |a| Option(B).Some(f(a)),
+                    .none => Option(B).None(),
                 },
-                .none_val => OptionApplicative(B).none(),
+                .none => Option(B).None(),
             };
         }
 
@@ -88,41 +88,41 @@ pub fn OptionApplicative(comptime A: type) type {
             optB: OptionApplicative(B).Option,
         ) OptionApplicative(C).Option {
             return switch (optA) {
-                .some_val => |a| switch (optB) {
-                    .some_val => |b| OptionApplicative(C).pure(f(a, b)),
-                    .none_val => OptionApplicative(C).none(),
+                .some => |a| switch (optB) {
+                    .some => |b| OptionApplicative(C).pure(f(a, b)),
+                    .none => OptionApplicative(C).none(),
                 },
-                .none_val => OptionApplicative(C).none(),
+                .none => OptionApplicative(C).none(),
             };
         }
 
         /// productR: 序列操作，保留右边的值
         pub fn productR(comptime B: type, optA: Option, optB: OptionApplicative(B).Option) OptionApplicative(B).Option {
             return switch (optA) {
-                .some_val => optB,
-                .none_val => OptionApplicative(B).none(),
+                .some => optB,
+                .none => OptionApplicative(B).none(),
             };
         }
 
         /// productL: 序列操作，保留左边的值
         pub fn productL(comptime B: type, optA: Option, optB: OptionApplicative(B).Option) Option {
             return switch (optA) {
-                .some_val => switch (optB) {
-                    .some_val => optA,
-                    .none_val => none(),
+                .some => switch (optB) {
+                    .some => optA,
+                    .none => OptionApplicative(A).none(),
                 },
-                .none_val => none(),
+                .none => OptionApplicative(A).none(),
             };
         }
 
         /// product: 组合两个 Option 为 tuple
         pub fn product(comptime B: type, optA: Option, optB: OptionApplicative(B).Option) OptionApplicative(struct { A, B }).Option {
             return switch (optA) {
-                .some_val => |a| switch (optB) {
-                    .some_val => |b| OptionApplicative(struct { A, B }).pure(.{ a, b }),
-                    .none_val => OptionApplicative(struct { A, B }).none(),
+                .some => |a| switch (optB) {
+                    .some => |b| OptionApplicative(struct { A, B }).pure(.{ a, b }),
+                    .none => OptionApplicative(struct { A, B }).none(),
                 },
-                .none_val => OptionApplicative(struct { A, B }).none(),
+                .none => OptionApplicative(struct { A, B }).none(),
             };
         }
     };
@@ -347,8 +347,8 @@ pub fn ListApplicative(comptime A: type) type {
 
             for (opts, 0..) |opt, i| {
                 switch (opt) {
-                    .some_val => |v| result[i] = v,
-                    .none_val => {
+                    .some => |v| result[i] = v,
+                    .none => {
                         allocator.free(result);
                         return null;
                     },
@@ -389,11 +389,11 @@ pub fn liftA3Option(
 
     // 再与 C 组合
     return switch (optAB) {
-        .some_val => |ab| switch (optC) {
-            .some_val => |c| OptionApplicative(D).pure(f(ab[0], ab[1], c)),
-            .none_val => OptionApplicative(D).none(),
+        .some => |ab| switch (optC) {
+            .some => |c| OptionApplicative(D).pure(f(ab[0], ab[1], c)),
+            .none => OptionApplicative(D).none(),
         },
-        .none_val => OptionApplicative(D).none(),
+        .none => OptionApplicative(D).none(),
     };
 }
 
@@ -422,7 +422,7 @@ test "OptionApplicative.pure" {
 
 test "OptionApplicative.none" {
     const OptInt = OptionApplicative(i32);
-    const opt = OptInt.none();
+    const opt = OptInt.Option{ .none = {} };
 
     try std.testing.expect(opt.isNone());
     try std.testing.expectEqual(@as(?i32, null), opt.getValue());
@@ -443,7 +443,7 @@ test "OptionApplicative.map" {
 
 test "OptionApplicative.map none" {
     const OptInt = OptionApplicative(i32);
-    const opt = OptInt.none();
+    const opt = OptInt.Option{ .none = {} };
 
     const mapped = OptInt.map(opt, i32, struct {
         fn f(x: i32) i32 {
@@ -471,7 +471,7 @@ test "OptionApplicative.liftA2" {
 test "OptionApplicative.liftA2 with none" {
     const OptInt = OptionApplicative(i32);
     const optA = OptInt.pure(10);
-    const optB = OptInt.none();
+    const optB = OptInt.Option{ .none = {} };
 
     const result = OptInt.liftA2(i32, i32, struct {
         fn f(a: i32, b: i32) i32 {
@@ -663,7 +663,7 @@ test "ListApplicative.sequenceOption with none" {
 
     const opts = [_]OptInt.Option{
         OptInt.pure(1),
-        OptInt.none(),
+        OptInt.Option{ .none = {} },
         OptInt.pure(3),
     };
 
@@ -691,7 +691,7 @@ test "liftA3Option with none" {
     const OptInt = OptionApplicative(i32);
 
     const optA = OptInt.pure(1);
-    const optB = OptInt.none();
+    const optB = OptInt.Option{ .none = {} };
     const optC = OptInt.pure(3);
 
     const result = liftA3Option(i32, i32, i32, i32, struct {

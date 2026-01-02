@@ -11,82 +11,10 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
 
-// ============ Option 类型（用于 Traversable） ============
-
-/// Option 类型
-pub fn Option(comptime A: type) type {
-    return union(enum) {
-        some_val: A,
-        none_val: void,
-
-        const Self = @This();
-
-        pub fn isSome(self: Self) bool {
-            return self == .some_val;
-        }
-
-        pub fn isNone(self: Self) bool {
-            return self == .none_val;
-        }
-
-        pub fn getValue(self: Self) ?A {
-            return switch (self) {
-                .some_val => |v| v,
-                .none_val => null,
-            };
-        }
-    };
-}
-
-pub fn some(comptime A: type, value: A) Option(A) {
-    return .{ .some_val = value };
-}
-
-pub fn none(comptime A: type) Option(A) {
-    return .{ .none_val = {} };
-}
-
-// ============ Result 类型（用于 Traversable） ============
-
-/// Result 类型
-pub fn Result(comptime A: type, comptime E: type) type {
-    return union(enum) {
-        ok_val: A,
-        err_val: E,
-
-        const Self = @This();
-
-        pub fn isOk(self: Self) bool {
-            return self == .ok_val;
-        }
-
-        pub fn isErr(self: Self) bool {
-            return self == .err_val;
-        }
-
-        pub fn getValue(self: Self) ?A {
-            return switch (self) {
-                .ok_val => |v| v,
-                .err_val => null,
-            };
-        }
-
-        pub fn getError(self: Self) ?E {
-            return switch (self) {
-                .ok_val => null,
-                .err_val => |e| e,
-            };
-        }
-    };
-}
-
-pub fn ok(comptime A: type, comptime E: type, value: A) Result(A, E) {
-    return .{ .ok_val = value };
-}
-
-pub fn err(comptime A: type, comptime E: type, error_val: E) Result(A, E) {
-    return .{ .err_val = error_val };
-}
+// 使用统一的类型定义
+const Option = @import("option.zig").Option;
+const result_mod = @import("result.zig");
+const Result = result_mod.Result;
 
 // ============ Slice Traversable ============
 
@@ -110,15 +38,15 @@ pub fn SliceTraversable(comptime A: type) type {
             for (slice, 0..) |item, i| {
                 const opt = f(item);
                 switch (opt) {
-                    .some_val => |v| result[i] = v,
-                    .none_val => {
+                    .some => |v| result[i] = v,
+                    .none => {
                         allocator.free(result);
-                        return none([]B);
+                        return Option([]B).None();
                     },
                 }
             }
 
-            return some([]B, result);
+            return Option([]B).Some(result);
         }
 
         /// sequenceOption: 将 Option 列表转换为列表的 Option
@@ -132,15 +60,15 @@ pub fn SliceTraversable(comptime A: type) type {
 
             for (opts, 0..) |opt, i| {
                 switch (opt) {
-                    .some_val => |v| result[i] = v,
-                    .none_val => {
+                    .some => |v| result[i] = v,
+                    .none => {
                         allocator.free(result);
-                        return none([]B);
+                        return Option([]B).None();
                     },
                 }
             }
 
-            return some([]B, result);
+            return Option([]B).Some(result);
         }
 
         // ============ traverse with Result ============
@@ -159,15 +87,15 @@ pub fn SliceTraversable(comptime A: type) type {
             for (slice, 0..) |item, i| {
                 const res = f(item);
                 switch (res) {
-                    .ok_val => |v| result[i] = v,
-                    .err_val => |e| {
+                    .ok => |v| result[i] = v,
+                    .err => |e| {
                         allocator.free(result);
-                        return err([]B, E, e);
+                        return result_mod.err([]B, E, e);
                     },
                 }
             }
 
-            return ok([]B, E, result);
+            return result_mod.ok([]B, E, result);
         }
 
         /// sequenceResult: 将 Result 列表转换为列表的 Result
@@ -182,15 +110,15 @@ pub fn SliceTraversable(comptime A: type) type {
 
             for (results, 0..) |res, i| {
                 switch (res) {
-                    .ok_val => |v| result[i] = v,
-                    .err_val => |e| {
+                    .ok => |v| result[i] = v,
+                    .err => |e| {
                         allocator.free(result);
-                        return err([]B, E, e);
+                        return result_mod.err([]B, E, e);
                     },
                 }
             }
 
-            return ok([]B, E, result);
+            return result_mod.ok([]B, E, result);
         }
 
         // ============ mapAccum ============
@@ -351,14 +279,14 @@ pub fn OptionTraversable(comptime A: type) type {
             f: *const fn (A) Option(B),
         ) Option(Option(B)) {
             return switch (opt) {
-                .some_val => |v| {
+                .some => |v| {
                     const result = f(v);
                     return switch (result) {
-                        .some_val => |b| some(Option(B), some(B, b)),
-                        .none_val => some(Option(B), none(B)),
+                        .some => |b| Option(Option(B)).Some(Option(B).Some(b)),
+                        .none => Option(Option(B)).Some(Option(B).None()),
                     };
                 },
-                .none_val => some(Option(B), none(B)),
+                .none => Option(Option(B)).Some(Option(B).None()),
             };
         }
 
@@ -367,19 +295,19 @@ pub fn OptionTraversable(comptime A: type) type {
             opt: Option(Option(A)),
         ) Option(Option(A)) {
             return switch (opt) {
-                .some_val => |inner| switch (inner) {
-                    .some_val => some(Option(A), inner),
-                    .none_val => none(Option(A)),
+                .some => |inner| switch (inner) {
+                    .some => Option(Option(A)).Some(inner),
+                    .none => Option(Option(A)).None(),
                 },
-                .none_val => some(Option(A), none(A)),
+                .none => Option(Option(A)).Some(Option(A).None()),
             };
         }
 
         /// map: Functor 操作
         pub fn map(opt: Option(A), comptime B: type, f: *const fn (A) B) Option(B) {
             return switch (opt) {
-                .some_val => |v| some(B, f(v)),
-                .none_val => none(B),
+                .some => |v| Option(B).Some(f(v)),
+                .none => Option(B).None(),
             };
         }
     };
@@ -438,12 +366,12 @@ test "SliceTraversable.traverseOption all some" {
     const nums = [_]i32{ 1, 2, 3 };
     const result = try Trav.traverseOption(allocator, &nums, i32, struct {
         fn f(x: i32) Option(i32) {
-            return some(i32, x * 2);
+            return Option(i32).Some(x * 2);
         }
     }.f);
 
     try std.testing.expect(result.isSome());
-    const values = result.getValue().?;
+    const values = result.toNullable().?;
     defer allocator.free(values);
 
     try std.testing.expectEqual(@as(usize, 3), values.len);
@@ -459,8 +387,8 @@ test "SliceTraversable.traverseOption with none" {
     const nums = [_]i32{ 1, 2, 3 };
     const result = try Trav.traverseOption(allocator, &nums, i32, struct {
         fn f(x: i32) Option(i32) {
-            if (x == 2) return none(i32);
-            return some(i32, x * 2);
+            if (x == 2) return Option(i32).None();
+            return Option(i32).Some(x * 2);
         }
     }.f);
 
@@ -472,14 +400,14 @@ test "SliceTraversable.sequenceOption all some" {
     const Trav = SliceTraversable(i32);
 
     const opts = [_]Option(i32){
-        some(i32, 1),
-        some(i32, 2),
-        some(i32, 3),
+        Option(i32).Some(1),
+        Option(i32).Some(2),
+        Option(i32).Some(3),
     };
 
     const result = try Trav.sequenceOption(allocator, i32, &opts);
     try std.testing.expect(result.isSome());
-    const values = result.getValue().?;
+    const values = result.toNullable().?;
     defer allocator.free(values);
 
     try std.testing.expectEqual(@as(usize, 3), values.len);
@@ -493,9 +421,9 @@ test "SliceTraversable.sequenceOption with none" {
     const Trav = SliceTraversable(i32);
 
     const opts = [_]Option(i32){
-        some(i32, 1),
-        none(i32),
-        some(i32, 3),
+        Option(i32).Some(1),
+        Option(i32).None(),
+        Option(i32).Some(3),
     };
 
     const result = try Trav.sequenceOption(allocator, i32, &opts);
@@ -509,12 +437,12 @@ test "SliceTraversable.traverseResult all ok" {
     const nums = [_]i32{ 1, 2, 3 };
     const result = try Trav.traverseResult(allocator, &nums, i32, []const u8, struct {
         fn f(x: i32) Result(i32, []const u8) {
-            return ok(i32, []const u8, x * 2);
+            return result_mod.ok(i32, []const u8, x * 2);
         }
     }.f);
 
     try std.testing.expect(result.isOk());
-    const values = result.getValue().?;
+    const values = result.unwrap();
     defer allocator.free(values);
 
     try std.testing.expectEqual(@as(usize, 3), values.len);
@@ -530,13 +458,13 @@ test "SliceTraversable.traverseResult with error" {
     const nums = [_]i32{ 1, 2, 3 };
     const result = try Trav.traverseResult(allocator, &nums, i32, []const u8, struct {
         fn f(x: i32) Result(i32, []const u8) {
-            if (x == 2) return err(i32, []const u8, "error at 2");
-            return ok(i32, []const u8, x * 2);
+            if (x == 2) return result_mod.err(i32, []const u8, "error at 2");
+            return result_mod.ok(i32, []const u8, x * 2);
         }
     }.f);
 
     try std.testing.expect(result.isErr());
-    try std.testing.expectEqualStrings("error at 2", result.getError().?);
+    try std.testing.expectEqualStrings("error at 2", result.unwrapErr());
 }
 
 test "SliceTraversable.mapAccumL" {
@@ -666,7 +594,7 @@ test "SliceTraversable.partition" {
 test "OptionTraversable.map" {
     const OptTrav = OptionTraversable(i32);
 
-    const s = some(i32, 21);
+    const s = Option(i32).Some(21);
     const mapped = OptTrav.map(s, i32, struct {
         fn double(x: i32) i32 {
             return x * 2;
@@ -674,9 +602,9 @@ test "OptionTraversable.map" {
     }.double);
 
     try std.testing.expect(mapped.isSome());
-    try std.testing.expectEqual(@as(?i32, 42), mapped.getValue());
+    try std.testing.expectEqual(@as(?i32, 42), mapped.toNullable());
 
-    const n = none(i32);
+    const n = Option(i32).None();
     const mappedNone = OptTrav.map(n, i32, struct {
         fn double(x: i32) i32 {
             return x * 2;
@@ -692,12 +620,12 @@ test "traverseSliceOption" {
     const nums = [_]i32{ 1, 2, 3 };
     const result = try traverseSliceOption(allocator, i32, i32, &nums, struct {
         fn f(x: i32) Option(i32) {
-            return some(i32, x * 2);
+            return Option(i32).Some(x * 2);
         }
     }.f);
 
     try std.testing.expect(result.isSome());
-    const values = result.getValue().?;
+    const values = result.toNullable().?;
     defer allocator.free(values);
 
     try std.testing.expectEqual(@as(usize, 3), values.len);
@@ -709,12 +637,12 @@ test "traverseSliceResult" {
     const nums = [_]i32{ 1, 2, 3 };
     const result = try traverseSliceResult(allocator, i32, i32, []const u8, &nums, struct {
         fn f(x: i32) Result(i32, []const u8) {
-            return ok(i32, []const u8, x * 2);
+            return result_mod.ok(i32, []const u8, x * 2);
         }
     }.f);
 
     try std.testing.expect(result.isOk());
-    const values = result.getValue().?;
+    const values = result.unwrap();
     defer allocator.free(values);
 
     try std.testing.expectEqual(@as(usize, 3), values.len);
