@@ -1,13 +1,23 @@
 //! 并行计算抽象
 //!
-//! 提供函数式的并行计算抽象。当前版本为顺序执行实现，
-//! 保持与未来并行版本相同的 API 接口。
+//! 提供函数式的并行计算抽象，支持真正的多线程并行执行。
 //!
 //! 功能包括:
 //! - 顺序/并行 map、filter、reduce
+//! - 真正的线程池实现 (RealThreadPool)
 //! - 批处理操作
-//! - 工作分割策略（接口）
+//! - 工作分割策略
 //! - 结果聚合
+//!
+//! ## 使用示例
+//!
+//! ```zig
+//! const pool = try RealThreadPool.init(allocator, .{ .num_threads = 4 });
+//! defer pool.deinit();
+//!
+//! const results = try realParMap(i32, i32, allocator, &data, square, &pool);
+//! defer allocator.free(results);
+//! ```
 
 const std = @import("std");
 
@@ -619,6 +629,409 @@ pub const LoadBalancer = struct {
     }
 };
 
+// ============ 真正的线程池实现 ============
+
+/// 真正的线程池配置
+pub const RealThreadPoolConfig = struct {
+    /// 工作线程数量（0 表示使用 CPU 核心数）
+    num_threads: usize = 0,
+    /// 任务队列最大容量
+    max_queue_size: usize = 1024,
+};
+
+/// 工作项 - 用于线程间传递任务
+const WorkItem = struct {
+    /// 任务函数指针
+    func: *const fn (*anyopaque) void,
+    /// 任务参数
+    arg: *anyopaque,
+};
+
+/// 真正的线程池 - 使用 Zig 原生线程
+pub const RealThreadPool = struct {
+    allocator: std.mem.Allocator,
+    threads: []std.Thread,
+    work_queue: std.ArrayList(WorkItem),
+    mutex: std.Thread.Mutex,
+    condition: std.Thread.Condition,
+    shutdown: bool,
+    active_tasks: usize,
+
+    const Self = @This();
+
+    /// 初始化线程池
+    pub fn init(allocator: std.mem.Allocator, config: RealThreadPoolConfig) !*Self {
+        const num_threads = if (config.num_threads == 0)
+            std.Thread.getCpuCount() catch 4
+        else
+            config.num_threads;
+
+        const self = try allocator.create(Self);
+        errdefer allocator.destroy(self);
+
+        self.* = Self{
+            .allocator = allocator,
+            .threads = try allocator.alloc(std.Thread, num_threads),
+            .work_queue = .{},
+            .mutex = .{},
+            .condition = .{},
+            .shutdown = false,
+            .active_tasks = 0,
+        };
+
+        // 启动工作线程
+        for (self.threads, 0..) |*thread, i| {
+            thread.* = std.Thread.spawn(.{}, workerThread, .{self}) catch |err| {
+                // 清理已创建的线程
+                for (self.threads[0..i]) |t| {
+                    t.join();
+                }
+                allocator.free(self.threads);
+                self.work_queue.deinit(allocator);
+                allocator.destroy(self);
+                return err;
+            };
+        }
+
+        return self;
+    }
+
+    /// 销毁线程池
+    pub fn deinit(self: *Self) void {
+        // 设置关闭标志
+        {
+            self.mutex.lock();
+            defer self.mutex.unlock();
+            self.shutdown = true;
+        }
+
+        // 唤醒所有等待的线程
+        self.condition.broadcast();
+
+        // 等待所有线程结束
+        for (self.threads) |thread| {
+            thread.join();
+        }
+
+        self.allocator.free(self.threads);
+        self.work_queue.deinit(self.allocator);
+        self.allocator.destroy(self);
+    }
+
+    /// 提交任务到线程池
+    pub fn submit(self: *Self, func: *const fn (*anyopaque) void, arg: *anyopaque) !void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+
+        if (self.shutdown) {
+            return error.PoolShutdown;
+        }
+
+        try self.work_queue.append(self.allocator, WorkItem{
+            .func = func,
+            .arg = arg,
+        });
+
+        self.condition.signal();
+    }
+
+    /// 等待所有任务完成
+    pub fn waitAll(self: *Self) void {
+        self.mutex.lock();
+        defer self.mutex.unlock();
+
+        while (self.work_queue.items.len > 0 or self.active_tasks > 0) {
+            self.condition.wait(&self.mutex);
+        }
+    }
+
+    /// 获取线程数
+    pub fn getThreadCount(self: *const Self) usize {
+        return self.threads.len;
+    }
+
+    /// 工作线程函数
+    fn workerThread(self: *Self) void {
+        while (true) {
+            var work_item: ?WorkItem = null;
+
+            {
+                self.mutex.lock();
+                defer self.mutex.unlock();
+
+                // 等待任务或关闭信号
+                while (self.work_queue.items.len == 0 and !self.shutdown) {
+                    self.condition.wait(&self.mutex);
+                }
+
+                if (self.shutdown and self.work_queue.items.len == 0) {
+                    return;
+                }
+
+                if (self.work_queue.items.len > 0) {
+                    work_item = self.work_queue.orderedRemove(0);
+                    self.active_tasks += 1;
+                }
+            }
+
+            // 执行任务
+            if (work_item) |item| {
+                item.func(item.arg);
+
+                self.mutex.lock();
+                self.active_tasks -= 1;
+                self.condition.broadcast();
+                self.mutex.unlock();
+            }
+        }
+    }
+};
+
+/// 并行 Map 任务上下文
+fn ParMapContext(comptime A: type, comptime B: type) type {
+    return struct {
+        input: []const A,
+        output: []B,
+        f: *const fn (A) B,
+        start_idx: usize,
+        end_idx: usize,
+        completed: *std.atomic.Value(usize),
+    };
+}
+
+/// 真正并行的 map 操作
+pub fn realParMap(
+    comptime A: type,
+    comptime B: type,
+    allocator: std.mem.Allocator,
+    slice: []const A,
+    f: *const fn (A) B,
+    pool: *RealThreadPool,
+) ![]B {
+    if (slice.len == 0) {
+        return try allocator.alloc(B, 0);
+    }
+
+    const output = try allocator.alloc(B, slice.len);
+    errdefer allocator.free(output);
+
+    const num_threads = pool.getThreadCount();
+    const chunk_size = (slice.len + num_threads - 1) / num_threads;
+
+    var completed = std.atomic.Value(usize).init(0);
+    const Context = ParMapContext(A, B);
+    var contexts = try allocator.alloc(Context, num_threads);
+    defer allocator.free(contexts);
+
+    var actual_chunks: usize = 0;
+    var offset: usize = 0;
+    while (offset < slice.len) : (actual_chunks += 1) {
+        const end = @min(offset + chunk_size, slice.len);
+        contexts[actual_chunks] = Context{
+            .input = slice,
+            .output = output,
+            .f = f,
+            .start_idx = offset,
+            .end_idx = end,
+            .completed = &completed,
+        };
+        offset = end;
+    }
+
+    // 提交所有任务
+    for (contexts[0..actual_chunks]) |*ctx| {
+        try pool.submit(struct {
+            fn work(arg: *anyopaque) void {
+                const context: *Context = @ptrCast(@alignCast(arg));
+                for (context.start_idx..context.end_idx) |i| {
+                    context.output[i] = context.f(context.input[i]);
+                }
+                _ = context.completed.fetchAdd(1, .release);
+            }
+        }.work, @ptrCast(ctx));
+    }
+
+    // 等待所有任务完成
+    pool.waitAll();
+
+    return output;
+}
+
+/// 并行 Filter 任务上下文
+fn ParFilterContext(comptime A: type) type {
+    return struct {
+        input: []const A,
+        predicate: *const fn (A) bool,
+        start_idx: usize,
+        end_idx: usize,
+        results: []A,
+        count: usize,
+        done: bool,
+    };
+}
+
+/// 真正并行的 filter 操作
+pub fn realParFilter(
+    comptime A: type,
+    allocator: std.mem.Allocator,
+    slice: []const A,
+    predicate: *const fn (A) bool,
+    pool: *RealThreadPool,
+) ![]A {
+    if (slice.len == 0) {
+        return try allocator.alloc(A, 0);
+    }
+
+    const num_threads = pool.getThreadCount();
+    const chunk_size = (slice.len + num_threads - 1) / num_threads;
+
+    const Context = ParFilterContext(A);
+    var contexts = try allocator.alloc(Context, num_threads);
+    defer allocator.free(contexts);
+
+    // 为每个 chunk 分配临时结果缓冲区
+    var temp_buffers = try allocator.alloc([]A, num_threads);
+    defer {
+        for (temp_buffers[0..contexts.len]) |buf| {
+            if (buf.len > 0) {
+                allocator.free(buf);
+            }
+        }
+        allocator.free(temp_buffers);
+    }
+
+    var actual_chunks: usize = 0;
+    var offset: usize = 0;
+    while (offset < slice.len) : (actual_chunks += 1) {
+        const end = @min(offset + chunk_size, slice.len);
+        const chunk_len = end - offset;
+
+        temp_buffers[actual_chunks] = try allocator.alloc(A, chunk_len);
+
+        contexts[actual_chunks] = Context{
+            .input = slice,
+            .predicate = predicate,
+            .start_idx = offset,
+            .end_idx = end,
+            .results = temp_buffers[actual_chunks],
+            .count = 0,
+            .done = false,
+        };
+        offset = end;
+    }
+
+    // 提交所有任务
+    for (contexts[0..actual_chunks]) |*ctx| {
+        try pool.submit(struct {
+            fn work(arg: *anyopaque) void {
+                const context: *Context = @ptrCast(@alignCast(arg));
+                var count: usize = 0;
+                for (context.input[context.start_idx..context.end_idx]) |item| {
+                    if (context.predicate(item)) {
+                        context.results[count] = item;
+                        count += 1;
+                    }
+                }
+                context.count = count;
+                context.done = true;
+            }
+        }.work, @ptrCast(ctx));
+    }
+
+    // 等待所有任务完成
+    pool.waitAll();
+
+    // 计算总结果数量
+    var total_count: usize = 0;
+    for (contexts[0..actual_chunks]) |ctx| {
+        total_count += ctx.count;
+    }
+
+    // 合并结果
+    const final_result = try allocator.alloc(A, total_count);
+    var result_offset: usize = 0;
+    for (contexts[0..actual_chunks]) |ctx| {
+        @memcpy(final_result[result_offset .. result_offset + ctx.count], ctx.results[0..ctx.count]);
+        result_offset += ctx.count;
+    }
+
+    return final_result;
+}
+
+/// 并行 Reduce 任务上下文
+fn ParReduceContext(comptime A: type) type {
+    return struct {
+        slice: []const A,
+        f: *const fn (A, A) A,
+        start_idx: usize,
+        end_idx: usize,
+        result: A,
+        done: bool,
+    };
+}
+
+/// 真正并行的 reduce 操作
+pub fn realParReduce(
+    comptime A: type,
+    allocator: std.mem.Allocator,
+    slice: []const A,
+    initial: A,
+    f: *const fn (A, A) A,
+    pool: *RealThreadPool,
+) !A {
+    if (slice.len == 0) {
+        return initial;
+    }
+
+    const num_threads = pool.getThreadCount();
+    const chunk_size = (slice.len + num_threads - 1) / num_threads;
+
+    const Context = ParReduceContext(A);
+    var contexts = try allocator.alloc(Context, num_threads);
+    defer allocator.free(contexts);
+
+    var actual_chunks: usize = 0;
+    var offset: usize = 0;
+    while (offset < slice.len) : (actual_chunks += 1) {
+        const end = @min(offset + chunk_size, slice.len);
+        contexts[actual_chunks] = Context{
+            .slice = slice,
+            .f = f,
+            .start_idx = offset,
+            .end_idx = end,
+            .result = initial,
+            .done = false,
+        };
+        offset = end;
+    }
+
+    // 提交所有任务
+    for (contexts[0..actual_chunks]) |*ctx| {
+        try pool.submit(struct {
+            fn work(arg: *anyopaque) void {
+                const context: *Context = @ptrCast(@alignCast(arg));
+                var acc = context.slice[context.start_idx];
+                for (context.slice[context.start_idx + 1 .. context.end_idx]) |item| {
+                    acc = context.f(acc, item);
+                }
+                context.result = acc;
+                context.done = true;
+            }
+        }.work, @ptrCast(ctx));
+    }
+
+    // 等待所有任务完成
+    pool.waitAll();
+
+    // 合并部分结果
+    var final_result = initial;
+    for (contexts[0..actual_chunks]) |ctx| {
+        final_result = f(final_result, ctx.result);
+    }
+
+    return final_result;
+}
+
 // ============ 测试 ============
 
 test "seqMap" {
@@ -816,4 +1229,96 @@ test "LoadBalancer round_robin" {
     try std.testing.expectEqual(@as(usize, 2), balancer.selectWorker());
     try std.testing.expectEqual(@as(usize, 3), balancer.selectWorker());
     try std.testing.expectEqual(@as(usize, 0), balancer.selectWorker()); // 循环
+}
+
+test "RealThreadPool init and deinit" {
+    const allocator = std.testing.allocator;
+    const pool = try RealThreadPool.init(allocator, .{ .num_threads = 2 });
+    defer pool.deinit();
+
+    try std.testing.expectEqual(@as(usize, 2), pool.getThreadCount());
+}
+
+test "RealThreadPool submit and wait" {
+    const allocator = std.testing.allocator;
+    const pool = try RealThreadPool.init(allocator, .{ .num_threads = 2 });
+    defer pool.deinit();
+
+    var counter = std.atomic.Value(usize).init(0);
+
+    const Context = struct {
+        counter: *std.atomic.Value(usize),
+    };
+
+    var ctx = Context{ .counter = &counter };
+
+    try pool.submit(struct {
+        fn work(arg: *anyopaque) void {
+            const c: *Context = @ptrCast(@alignCast(arg));
+            _ = c.counter.fetchAdd(1, .release);
+        }
+    }.work, @ptrCast(&ctx));
+
+    pool.waitAll();
+
+    try std.testing.expectEqual(@as(usize, 1), counter.load(.acquire));
+}
+
+test "realParMap basic" {
+    const allocator = std.testing.allocator;
+    const pool = try RealThreadPool.init(allocator, .{ .num_threads = 2 });
+    defer pool.deinit();
+
+    const nums = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 8 };
+
+    const mapped = try realParMap(i32, i32, allocator, &nums, struct {
+        fn double(x: i32) i32 {
+            return x * 2;
+        }
+    }.double, pool);
+    defer allocator.free(mapped);
+
+    try std.testing.expectEqual(@as(usize, 8), mapped.len);
+    try std.testing.expectEqual(@as(i32, 2), mapped[0]);
+    try std.testing.expectEqual(@as(i32, 4), mapped[1]);
+    try std.testing.expectEqual(@as(i32, 16), mapped[7]);
+}
+
+test "realParReduce basic" {
+    const allocator = std.testing.allocator;
+    const pool = try RealThreadPool.init(allocator, .{ .num_threads = 2 });
+    defer pool.deinit();
+
+    const nums = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 8 };
+
+    const sum = try realParReduce(i32, allocator, &nums, 0, struct {
+        fn add(a: i32, b: i32) i32 {
+            return a + b;
+        }
+    }.add, pool);
+
+    try std.testing.expectEqual(@as(i32, 36), sum);
+}
+
+test "realParFilter basic" {
+    const allocator = std.testing.allocator;
+    const pool = try RealThreadPool.init(allocator, .{ .num_threads = 2 });
+    defer pool.deinit();
+
+    const nums = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 8 };
+
+    const filtered = try realParFilter(i32, allocator, &nums, struct {
+        fn isEven(x: i32) bool {
+            return @rem(x, 2) == 0;
+        }
+    }.isEven, pool);
+    defer allocator.free(filtered);
+
+    try std.testing.expectEqual(@as(usize, 4), filtered.len);
+    // 注意：并行结果可能顺序不同，但应包含所有偶数
+    var sum: i32 = 0;
+    for (filtered) |n| {
+        sum += n;
+    }
+    try std.testing.expectEqual(@as(i32, 20), sum); // 2+4+6+8=20
 }
