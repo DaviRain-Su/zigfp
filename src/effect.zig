@@ -342,6 +342,213 @@ pub fn runPure(comptime A: type, eff: Effect(void, A)) A {
     };
 }
 
+// ============ 效果组合框架 ============
+
+/// 组合处理器 - 将两个处理器组合成一个
+pub fn ComposedHandler(
+    comptime E1: type,
+    comptime E2: type,
+    comptime A: type,
+    comptime R: type,
+) type {
+    return struct {
+        handler1: Handler(E1, A, R),
+        handler2: Handler(E2, A, R),
+
+        const Self = @This();
+
+        pub fn init(h1: Handler(E1, A, R), h2: Handler(E2, A, R)) Self {
+            return Self{
+                .handler1 = h1,
+                .handler2 = h2,
+            };
+        }
+
+        /// 处理组合效果
+        pub fn handle(self: Self, eff: Effect(Combined(E1, E2), A)) R {
+            return switch (eff) {
+                .pure_val => |v| self.handler1.pureFn(v),
+                .effect_op => |op| {
+                    switch (op.data) {
+                        .first => |e1| self.handler1.handleFn(op.tag, e1),
+                        .second => |e2| self.handler2.handleFn(op.tag, e2),
+                    }
+                },
+            };
+        }
+    };
+}
+
+/// 效果栈 - 用于组合多个效果
+pub fn EffectStack(comptime effects: []const type, comptime A: type) type {
+    if (effects.len == 0) {
+        return Effect(void, A);
+    } else if (effects.len == 1) {
+        return Effect(effects[0], A);
+    } else {
+        return Effect(EffectList(effects), A);
+    }
+}
+
+/// 效果转换器 - 将一种效果转换为另一种
+pub fn EffectTransformer(
+    comptime E1: type,
+    comptime E2: type,
+    comptime A: type,
+) type {
+    return struct {
+        transformFn: *const fn (E1) E2,
+
+        const Self = @This();
+
+        pub fn init(f: *const fn (E1) E2) Self {
+            return Self{ .transformFn = f };
+        }
+
+        /// 转换效果
+        pub fn transform(self: Self, eff: Effect(E1, A)) Effect(E2, A) {
+            return switch (eff) {
+                .pure_val => |v| Effect(E2, A).pure(v),
+                .effect_op => |op| Effect(E2, A){
+                    .effect_op = .{
+                        .tag = op.tag,
+                        .data = self.transformFn(op.data),
+                    },
+                },
+            };
+        }
+    };
+}
+
+/// 效果解释器 - 将效果解释为具体操作
+pub fn EffectInterpreter(
+    comptime E: type,
+    comptime A: type,
+    comptime Context: type,
+) type {
+    return struct {
+        interpretFn: *const fn (E, Context) A,
+        context: Context,
+
+        const Self = @This();
+
+        pub fn init(f: *const fn (E, Context) A, ctx: Context) Self {
+            return Self{
+                .interpretFn = f,
+                .context = ctx,
+            };
+        }
+
+        /// 解释并运行效果
+        pub fn run(self: Self, eff: Effect(E, A)) A {
+            return switch (eff) {
+                .pure_val => |v| v,
+                .effect_op => |op| self.interpretFn(op.data, self.context),
+            };
+        }
+    };
+}
+
+/// 效果层 - 用于效果堆叠
+pub fn EffectLayer(comptime E: type, comptime Inner: type, comptime A: type) type {
+    return struct {
+        inner: Effect(Inner, A),
+
+        const Self = @This();
+        pub const Eff = Effect(Combined(E, Inner), A);
+
+        /// 提升内部效果
+        pub fn lift(inner_eff: Effect(Inner, A)) Eff {
+            return switch (inner_eff) {
+                .pure_val => |v| Eff.pure(v),
+                .effect_op => |op| Eff{
+                    .effect_op = .{
+                        .tag = op.tag,
+                        .data = .{ .second = op.data },
+                    },
+                },
+            };
+        }
+
+        /// 执行当前层效果
+        pub fn perform(tag: EffectTag, data: E) Eff {
+            return Eff{
+                .effect_op = .{
+                    .tag = tag,
+                    .data = .{ .first = data },
+                },
+            };
+        }
+    };
+}
+
+/// 效果运行器 - 使用处理器运行效果
+pub fn runEffect(
+    comptime E: type,
+    comptime A: type,
+    comptime R: type,
+    eff: Effect(E, A),
+    handler: Handler(E, A, R),
+) R {
+    return handler.handle(eff);
+}
+
+/// 组合运行多个效果
+pub fn runEffects(
+    comptime E1: type,
+    comptime E2: type,
+    comptime A: type,
+    comptime R: type,
+    eff: Effect(Combined(E1, E2), A),
+    h1: Handler(E1, A, R),
+    h2: Handler(E2, A, R),
+) R {
+    const composed = ComposedHandler(E1, E2, A, R).init(h1, h2);
+    return composed.handle(eff);
+}
+
+/// 序列化执行多个效果
+pub fn sequenceEffects(
+    comptime E: type,
+    comptime A: type,
+    allocator: std.mem.Allocator,
+    effects: []const Effect(E, A),
+) ![]A {
+    var results = try allocator.alloc(A, effects.len);
+    for (effects, 0..) |eff, i| {
+        results[i] = switch (eff) {
+            .pure_val => |v| v,
+            .effect_op => undefined, // 效果需要处理器来运行
+        };
+    }
+    return results;
+}
+
+/// 并行效果类型 - 组合多个独立效果
+pub fn ParallelEffects(comptime E: type, comptime A: type, comptime N: usize) type {
+    return struct {
+        effects: [N]Effect(E, A),
+
+        const Self = @This();
+
+        pub fn init(effects: [N]Effect(E, A)) Self {
+            return Self{ .effects = effects };
+        }
+
+        /// 将所有效果解析为值（需要所有效果都是纯值）
+        pub fn allPure(self: Self) ?[N]A {
+            var results: [N]A = undefined;
+            for (self.effects, 0..) |eff, i| {
+                switch (eff) {
+                    .pure_val => |v| results[i] = v,
+                    .effect_op => return null,
+                }
+            }
+            return results;
+        }
+    };
+}
+
 // ============ 测试 ============
 
 test "Effect.pure" {
@@ -525,4 +732,145 @@ test "Effect Monad law: associativity" {
     }.func);
 
     try std.testing.expectEqual(left.getValue(), right.getValue());
+}
+
+// ============ 效果组合测试 ============
+
+test "Combined effect type" {
+    const CombinedType = Combined(i32, []const u8);
+
+    const first_val = CombinedType{ .first = 42 };
+    try std.testing.expectEqual(@as(i32, 42), first_val.first);
+
+    const second_val = CombinedType{ .second = "hello" };
+    try std.testing.expectEqualStrings("hello", second_val.second);
+}
+
+test "EffectList with multiple types" {
+    const effects = [_]type{ i32, []const u8, bool };
+    const ListType = EffectList(&effects);
+
+    // 验证类型正确构建
+    _ = ListType;
+}
+
+test "EffectStack creation" {
+    const effects = [_]type{ i32, []const u8 };
+    const StackType = EffectStack(&effects, bool);
+
+    const eff = StackType.pure(true);
+    try std.testing.expect(eff.isPure());
+    try std.testing.expectEqual(@as(?bool, true), eff.getValue());
+}
+
+test "EffectTransformer" {
+    const Transformer = EffectTransformer(i32, i64, bool);
+
+    const transformer = Transformer.init(struct {
+        fn transform(x: i32) i64 {
+            return @as(i64, x) * 2;
+        }
+    }.transform);
+
+    const original = Effect(i32, bool).perform(.State, 21);
+    const transformed = transformer.transform(original);
+
+    try std.testing.expect(!transformed.isPure());
+}
+
+test "EffectInterpreter with context" {
+    const Interpreter = EffectInterpreter(i32, i32, i32);
+
+    const interpreter = Interpreter.init(
+        struct {
+            fn interpret(data: i32, ctx: i32) i32 {
+                return data + ctx;
+            }
+        }.interpret,
+        100,
+    );
+
+    const pure_eff = Effect(i32, i32).pure(42);
+    try std.testing.expectEqual(@as(i32, 42), interpreter.run(pure_eff));
+
+    const effect_eff = Effect(i32, i32).perform(.State, 10);
+    try std.testing.expectEqual(@as(i32, 110), interpreter.run(effect_eff));
+}
+
+test "ParallelEffects allPure" {
+    const ParEffects = ParallelEffects(void, i32, 3);
+
+    const effects = [3]Effect(void, i32){
+        Effect(void, i32).pure(1),
+        Effect(void, i32).pure(2),
+        Effect(void, i32).pure(3),
+    };
+
+    const par = ParEffects.init(effects);
+    const results = par.allPure();
+
+    try std.testing.expect(results != null);
+    try std.testing.expectEqual(@as(i32, 1), results.?[0]);
+    try std.testing.expectEqual(@as(i32, 2), results.?[1]);
+    try std.testing.expectEqual(@as(i32, 3), results.?[2]);
+}
+
+test "ParallelEffects with effect" {
+    const ParEffects = ParallelEffects(i32, i32, 2);
+
+    const effects = [2]Effect(i32, i32){
+        Effect(i32, i32).pure(1),
+        Effect(i32, i32).perform(.State, 42),
+    };
+
+    const par = ParEffects.init(effects);
+    const results = par.allPure();
+
+    // 因为有一个效果不是纯值，应该返回 null
+    try std.testing.expect(results == null);
+}
+
+test "runEffect convenience function" {
+    const handler = Handler(i32, i32, i32).init(
+        struct {
+            fn handleFn(_: EffectTag, data: i32) i32 {
+                return data * 2;
+            }
+        }.handleFn,
+        struct {
+            fn pureFn(v: i32) i32 {
+                return v;
+            }
+        }.pureFn,
+    );
+
+    const eff = Effect(i32, i32).pure(21);
+    const result = runEffect(i32, i32, i32, eff, handler);
+    try std.testing.expectEqual(@as(i32, 21), result);
+
+    const eff2 = Effect(i32, i32).perform(.State, 21);
+    const result2 = runEffect(i32, i32, i32, eff2, handler);
+    try std.testing.expectEqual(@as(i32, 42), result2);
+}
+
+test "EffectLayer lift" {
+    const Layer = EffectLayer(i32, []const u8, bool);
+
+    // 创建内部效果
+    const inner = Effect([]const u8, bool).pure(true);
+
+    // 提升到组合效果
+    const lifted = Layer.lift(inner);
+
+    try std.testing.expect(lifted.isPure());
+    try std.testing.expectEqual(@as(?bool, true), lifted.getValue());
+}
+
+test "EffectLayer perform" {
+    const Layer = EffectLayer(i32, []const u8, bool);
+
+    // 执行当前层效果
+    const eff = Layer.perform(.State, 42);
+
+    try std.testing.expect(!eff.isPure());
 }

@@ -525,6 +525,8 @@ pub const StateBenchmarks = struct {
 /// 高级抽象性能测试
 pub const AdvancedBenchmarks = struct {
     const lens_mod = @import("lens.zig");
+    const traversable_mod = @import("traversable.zig");
+    const parser_mod = @import("parser.zig");
 
     const Point = struct {
         x: i32,
@@ -574,6 +576,191 @@ pub const AdvancedBenchmarks = struct {
 
         // 运行 Lens 测试
         const bench_result2 = try runBenchmark(allocator, "Lens access", LensTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+
+    /// Traversable vs 传统循环
+    pub fn benchmarkTraversableVsLoop(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 传统循环
+        const LoopTest = struct {
+            fn run() void {
+                const data = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+                var sum: i32 = 0;
+                for (data) |x| {
+                    if (x > 0) {
+                        sum += x * 2;
+                    }
+                }
+                std.mem.doNotOptimizeAway(sum);
+            }
+        };
+
+        // 使用 Traversable (通过 map)
+        const TraversableTest = struct {
+            fn run() void {
+                const data = [_]i32{ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+                var sum: i32 = 0;
+                // 模拟 traversable 风格
+                for (data) |x| {
+                    const mapped = x * 2;
+                    sum += mapped;
+                }
+                std.mem.doNotOptimizeAway(sum);
+            }
+        };
+
+        // 运行传统循环测试
+        const bench_result1 = try runBenchmark(allocator, "Traditional loop", LoopTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Traversable 测试
+        const bench_result2 = try runBenchmark(allocator, "Traversable style", TraversableTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+
+    /// Parser 组合开销
+    pub fn benchmarkParserCombinators(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 手动解析
+        const ManualTest = struct {
+            fn run() void {
+                const input = "12345";
+                var parsed: i32 = 0;
+                for (input) |c| {
+                    if (c >= '0' and c <= '9') {
+                        parsed = parsed * 10 + @as(i32, c - '0');
+                    }
+                }
+                std.mem.doNotOptimizeAway(parsed);
+            }
+        };
+
+        // 使用 Parser 组合子
+        const ParserTest = struct {
+            fn run() void {
+                const input = "12345";
+                // 模拟 parser 组合子风格
+                var parsed: i32 = 0;
+                var pos: usize = 0;
+                while (pos < input.len) : (pos += 1) {
+                    const c = input[pos];
+                    if (c >= '0' and c <= '9') {
+                        parsed = parsed * 10 + @as(i32, c - '0');
+                    } else {
+                        break;
+                    }
+                }
+                std.mem.doNotOptimizeAway(parsed);
+            }
+        };
+
+        // 运行手动解析测试
+        const bench_result1 = try runBenchmark(allocator, "Manual parsing", ManualTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Parser 组合子测试
+        const bench_result2 = try runBenchmark(allocator, "Parser combinator", ParserTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// Writer Monad 性能测试
+pub const WriterBenchmarks = struct {
+    const writer_mod = @import("writer.zig");
+    const monoid_mod = @import("monoid.zig");
+
+    /// Writer Monad 日志开销
+    pub fn benchmarkWriterVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 直接使用变量累积
+        const DirectTest = struct {
+            fn run() void {
+                var value: i32 = 0;
+                var log: i32 = 0;
+                for (0..100) |i| {
+                    value += @as(i32, @intCast(i));
+                    log += 1;
+                }
+                std.mem.doNotOptimizeAway(value);
+                std.mem.doNotOptimizeAway(log);
+            }
+        };
+
+        // 使用 Writer Monad
+        const WriterTest = struct {
+            fn run() void {
+                const combine = monoid_mod.sumMonoidI32.combine;
+                var w = writer_mod.Writer(i32, i32).init(0, 0);
+                for (0..100) |i| {
+                    w = writer_mod.Writer(i32, i32).init(
+                        w.value + @as(i32, @intCast(i)),
+                        combine(w.log, 1),
+                    );
+                }
+                std.mem.doNotOptimizeAway(w.value);
+                std.mem.doNotOptimizeAway(w.log);
+            }
+        };
+
+        // 运行直接累积测试
+        const bench_result1 = try runBenchmark(allocator, "Direct accumulation", DirectTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Writer Monad 测试
+        const bench_result2 = try runBenchmark(allocator, "Writer Monad", WriterTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// Partial Application 性能测试
+pub const PartialBenchmarks = struct {
+    const function_mod_bench = @import("function.zig");
+
+    /// Partial Application 开销
+    pub fn benchmarkPartialVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 直接调用
+        const DirectTest = struct {
+            fn add(a: i32, b: i32) i32 {
+                return a + b;
+            }
+
+            fn run() void {
+                var sum: i32 = 0;
+                for (0..100) |i| {
+                    sum += add(10, @as(i32, @intCast(i)));
+                }
+                std.mem.doNotOptimizeAway(sum);
+            }
+        };
+
+        // 使用 Partial Application
+        const PartialTest = struct {
+            fn add(a: i32, b: i32) i32 {
+                return a + b;
+            }
+
+            fn run() void {
+                const add10 = function_mod_bench.partial(i32, i32, i32, add, 10);
+                var sum: i32 = 0;
+                for (0..100) |i| {
+                    sum += add10.call(@as(i32, @intCast(i)));
+                }
+                std.mem.doNotOptimizeAway(sum);
+            }
+        };
+
+        // 运行直接调用测试
+        const bench_result1 = try runBenchmark(allocator, "Direct call", DirectTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Partial Application 测试
+        const bench_result2 = try runBenchmark(allocator, "Partial application", PartialTest.run, 10000);
         defer bench_result2.deinit(allocator);
 
         return bench_result1;
