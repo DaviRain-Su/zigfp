@@ -138,15 +138,15 @@ src/
 | `functor.zig` | ✅ | Functor - 可映射的类型构造器 |
 | `alternative.zig` | ✅ | Alternative - 选择和重复操作 |
 
-### v0.7.0 - Monad 组合与实用工具
+### v0.7.0 - Monad 组合与实用工具 🔄
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `mtl.zig` | ⏳ | Monad Transformer Library - EitherT/OptionT/StateT/ReaderT/WriterT |
-| `prelude.zig` | ⏳ | Prelude - 常用函数、类型别名和运算符重载 |
-| `category.zig` | ⏳ | Category Theory - 范畴论基础抽象 |
-| `distributive.zig` | ⏳ | Distributive Laws - 分配律实现 |
-| `selective.zig` | ⏳ | Selective Applicative Functors - 选择性应用函子 |
+| `prelude.zig` | ✅ | Prelude - 常用函数、类型别名和运算符重载 |
+| `category.zig` | ✅ | Category Theory - 函数范畴、Kleisli范畴 |
+| `mtl.zig` | ⏳ | Monad Transformer Library (待实现) |
+| `distributive.zig` | ⏳ | Distributive Laws (待实现) |
+| `selective.zig` | ⏳ | Selective Applicative Functors (待实现) |
 
 ### v0.8.0 - 性能优化与基准测试
 

@@ -354,6 +354,31 @@ pub const manyOption = alternative.manyOption;
 pub const someOption = alternative.someOption;
 pub const optionalOption = alternative.optionalOption;
 
+/// Prelude - 函数式编程标准库
+pub const prelude = @import("prelude.zig");
+// 类型别名
+pub const Maybe = prelude.Maybe;
+pub const PreludeEither = prelude.Either;
+pub const Id = prelude.Id;
+pub const Unit = prelude.Unit;
+// 常用函数
+pub const idFn = prelude.id;
+pub const constantFn = prelude.constant;
+pub const compose2Fn = prelude.compose2;
+pub const whenFn = prelude.when;
+pub const unlessFn = prelude.unless;
+pub const someFn = prelude.some;
+pub const noneFn = prelude.none;
+pub const okFn = prelude.ok;
+pub const errFn = prelude.err;
+pub const pureFn = prelude.pure;
+pub const unitFn = prelude.unit;
+// 运算符常量
+pub const fmapOp = prelude.fmap;
+pub const apOp = prelude.ap;
+pub const bindOp = prelude.bind;
+pub const combineOp = prelude.combine_op;
+
 // ============ 测试 ============
 
 test {
