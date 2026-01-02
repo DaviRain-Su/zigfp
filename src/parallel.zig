@@ -330,6 +330,295 @@ pub fn parFilter(
     return seqFilter(A, allocator, slice, predicate);
 }
 
+// ============ 调度器接口（预留） ============
+
+/// 任务状态
+pub const TaskStatus = enum {
+    pending,
+    running,
+    completed,
+    failed,
+    cancelled,
+};
+
+/// 任务优先级
+pub const TaskPriority = enum {
+    low,
+    normal,
+    high,
+    critical,
+};
+
+/// 任务描述
+pub const Task = struct {
+    id: usize,
+    priority: TaskPriority,
+    status: TaskStatus,
+
+    pub fn init(id: usize) Task {
+        return Task{
+            .id = id,
+            .priority = .normal,
+            .status = .pending,
+        };
+    }
+};
+
+/// 调度器配置
+pub const SchedulerConfig = struct {
+    /// 工作线程数量（0 表示自动检测）
+    num_threads: usize = 0,
+    /// 任务队列大小
+    queue_size: usize = 1024,
+    /// 是否启用工作窃取
+    work_stealing: bool = true,
+    /// 空闲超时（毫秒，0 表示不超时）
+    idle_timeout_ms: u64 = 0,
+};
+
+/// 调度器接口 - 抽象基类
+/// 注意：当前为接口定义，真正的实现需要线程支持
+pub const Scheduler = struct {
+    /// 虚函数表
+    vtable: *const VTable,
+
+    pub const VTable = struct {
+        submit: *const fn (*Scheduler, Task) SchedulerError!void,
+        shutdown: *const fn (*Scheduler) void,
+        isShutdown: *const fn (*const Scheduler) bool,
+    };
+
+    pub const SchedulerError = error{
+        QueueFull,
+        ShutdownInProgress,
+        InvalidTask,
+    };
+
+    /// 提交任务
+    pub fn submit(self: *Scheduler, task: Task) SchedulerError!void {
+        return self.vtable.submit(self, task);
+    }
+
+    /// 优雅关闭
+    pub fn shutdown(self: *Scheduler) void {
+        self.vtable.shutdown(self);
+    }
+
+    /// 检查是否已关闭
+    pub fn isShutdown(self: *const Scheduler) bool {
+        return self.vtable.isShutdown(self);
+    }
+};
+
+/// 固定大小线程池（接口预留）
+/// 注意：当前为顺序执行的模拟实现，真正的并行需要 Zig 线程支持
+pub const FixedThreadPool = struct {
+    config: SchedulerConfig,
+    is_shutdown: bool,
+    task_count: usize,
+
+    const Self = @This();
+
+    /// 创建固定大小线程池
+    pub fn init(config: SchedulerConfig) Self {
+        return Self{
+            .config = config,
+            .is_shutdown = false,
+            .task_count = 0,
+        };
+    }
+
+    /// 获取线程数
+    pub fn getThreadCount(self: *const Self) usize {
+        if (self.config.num_threads == 0) {
+            // 自动检测：返回 CPU 核心数（模拟）
+            return 4; // 默认值
+        }
+        return self.config.num_threads;
+    }
+
+    /// 提交任务（当前为同步执行）
+    pub fn submit(self: *Self, task: Task) Scheduler.SchedulerError!void {
+        if (self.is_shutdown) {
+            return Scheduler.SchedulerError.ShutdownInProgress;
+        }
+        // 当前为同步执行，未来实现真正的并行
+        self.task_count += 1;
+        _ = task;
+    }
+
+    /// 优雅关闭
+    pub fn shutdown(self: *Self) void {
+        self.is_shutdown = true;
+    }
+
+    /// 检查是否已关闭
+    pub fn isShutdown(self: *const Self) bool {
+        return self.is_shutdown;
+    }
+
+    /// 等待所有任务完成
+    pub fn awaitTermination(self: *Self) void {
+        // 当前为同步执行，无需等待
+        _ = self;
+    }
+};
+
+/// 工作窃取调度器（接口预留）
+/// 注意：当前为顺序执行的模拟实现，真正的工作窃取需要 Zig 线程支持
+pub const WorkStealingScheduler = struct {
+    config: SchedulerConfig,
+    is_shutdown: bool,
+    task_count: usize,
+
+    const Self = @This();
+
+    /// 创建工作窃取调度器
+    pub fn init(config: SchedulerConfig) Self {
+        return Self{
+            .config = config,
+            .is_shutdown = false,
+            .task_count = 0,
+        };
+    }
+
+    /// 获取工作线程数
+    pub fn getWorkerCount(self: *const Self) usize {
+        if (self.config.num_threads == 0) {
+            return 4; // 默认值
+        }
+        return self.config.num_threads;
+    }
+
+    /// 提交任务（当前为同步执行）
+    pub fn submit(self: *Self, task: Task) Scheduler.SchedulerError!void {
+        if (self.is_shutdown) {
+            return Scheduler.SchedulerError.ShutdownInProgress;
+        }
+        self.task_count += 1;
+        _ = task;
+    }
+
+    /// 尝试窃取任务（当前返回 null）
+    pub fn trySteal(self: *Self) ?Task {
+        _ = self;
+        // 当前为顺序执行，无任务可窃取
+        return null;
+    }
+
+    /// 优雅关闭
+    pub fn shutdown(self: *Self) void {
+        self.is_shutdown = true;
+    }
+
+    /// 检查是否已关闭
+    pub fn isShutdown(self: *const Self) bool {
+        return self.is_shutdown;
+    }
+
+    /// 等待所有任务完成
+    pub fn awaitTermination(self: *Self) void {
+        _ = self;
+    }
+};
+
+/// 任务队列（接口预留）
+pub const TaskQueue = struct {
+    capacity: usize,
+    count: usize,
+
+    const Self = @This();
+
+    pub fn init(capacity: usize) Self {
+        return Self{
+            .capacity = capacity,
+            .count = 0,
+        };
+    }
+
+    /// 入队
+    pub fn enqueue(self: *Self, task: Task) !void {
+        if (self.count >= self.capacity) {
+            return error.QueueFull;
+        }
+        self.count += 1;
+        _ = task;
+    }
+
+    /// 出队
+    pub fn dequeue(self: *Self) ?Task {
+        if (self.count == 0) {
+            return null;
+        }
+        self.count -= 1;
+        return Task.init(0);
+    }
+
+    /// 队列是否为空
+    pub fn isEmpty(self: *const Self) bool {
+        return self.count == 0;
+    }
+
+    /// 队列是否已满
+    pub fn isFull(self: *const Self) bool {
+        return self.count >= self.capacity;
+    }
+};
+
+/// 负载均衡策略
+pub const LoadBalanceStrategy = enum {
+    /// 轮询
+    round_robin,
+    /// 最少任务优先
+    least_tasks,
+    /// 随机分配
+    random,
+    /// 基于亲和性
+    affinity,
+};
+
+/// 负载均衡器（接口预留）
+pub const LoadBalancer = struct {
+    strategy: LoadBalanceStrategy,
+    worker_count: usize,
+    current_worker: usize,
+
+    const Self = @This();
+
+    pub fn init(strategy: LoadBalanceStrategy, worker_count: usize) Self {
+        return Self{
+            .strategy = strategy,
+            .worker_count = worker_count,
+            .current_worker = 0,
+        };
+    }
+
+    /// 选择下一个工作线程
+    pub fn selectWorker(self: *Self) usize {
+        switch (self.strategy) {
+            .round_robin => {
+                const worker = self.current_worker;
+                self.current_worker = (self.current_worker + 1) % self.worker_count;
+                return worker;
+            },
+            .least_tasks => {
+                // 简化实现：返回第一个
+                return 0;
+            },
+            .random => {
+                // 简化实现：轮询
+                const worker = self.current_worker;
+                self.current_worker = (self.current_worker + 1) % self.worker_count;
+                return worker;
+            },
+            .affinity => {
+                // 简化实现：返回第一个
+                return 0;
+            },
+        }
+    }
+};
+
 // ============ 测试 ============
 
 test "seqMap" {
@@ -461,4 +750,70 @@ test "parSequence" {
     try std.testing.expectEqual(@as(i32, 1), results[0]);
     try std.testing.expectEqual(@as(i32, 2), results[1]);
     try std.testing.expectEqual(@as(i32, 3), results[2]);
+}
+
+test "Task init" {
+    const task = Task.init(42);
+    try std.testing.expectEqual(@as(usize, 42), task.id);
+    try std.testing.expectEqual(TaskPriority.normal, task.priority);
+    try std.testing.expectEqual(TaskStatus.pending, task.status);
+}
+
+test "FixedThreadPool basic" {
+    var pool = FixedThreadPool.init(.{ .num_threads = 4 });
+
+    try std.testing.expectEqual(@as(usize, 4), pool.getThreadCount());
+    try std.testing.expect(!pool.isShutdown());
+
+    const task = Task.init(1);
+    try pool.submit(task);
+    try std.testing.expectEqual(@as(usize, 1), pool.task_count);
+
+    pool.shutdown();
+    try std.testing.expect(pool.isShutdown());
+
+    // 关闭后不能提交任务
+    const result = pool.submit(Task.init(2));
+    try std.testing.expectError(Scheduler.SchedulerError.ShutdownInProgress, result);
+}
+
+test "WorkStealingScheduler basic" {
+    var scheduler = WorkStealingScheduler.init(.{ .num_threads = 8 });
+
+    try std.testing.expectEqual(@as(usize, 8), scheduler.getWorkerCount());
+    try std.testing.expect(!scheduler.isShutdown());
+
+    const task = Task.init(1);
+    try scheduler.submit(task);
+
+    // 当前没有任务可窃取
+    try std.testing.expect(scheduler.trySteal() == null);
+
+    scheduler.shutdown();
+    try std.testing.expect(scheduler.isShutdown());
+}
+
+test "TaskQueue basic" {
+    var queue = TaskQueue.init(10);
+
+    try std.testing.expect(queue.isEmpty());
+    try std.testing.expect(!queue.isFull());
+
+    try queue.enqueue(Task.init(1));
+    try std.testing.expect(!queue.isEmpty());
+    try std.testing.expectEqual(@as(usize, 1), queue.count);
+
+    const task = queue.dequeue();
+    try std.testing.expect(task != null);
+    try std.testing.expect(queue.isEmpty());
+}
+
+test "LoadBalancer round_robin" {
+    var balancer = LoadBalancer.init(.round_robin, 4);
+
+    try std.testing.expectEqual(@as(usize, 0), balancer.selectWorker());
+    try std.testing.expectEqual(@as(usize, 1), balancer.selectWorker());
+    try std.testing.expectEqual(@as(usize, 2), balancer.selectWorker());
+    try std.testing.expectEqual(@as(usize, 3), balancer.selectWorker());
+    try std.testing.expectEqual(@as(usize, 0), balancer.selectWorker()); // 循环
 }

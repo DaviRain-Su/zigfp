@@ -398,14 +398,29 @@ pub const seqFilter = parallel.seqFilter;
 pub const seqReduce = parallel.seqReduce;
 pub const seqFold = parallel.seqFold;
 pub const seqZip = parallel.seqZip;
+pub const seqFlatMap = parallel.seqFlatMap;
 pub const batchMap = parallel.batchMap;
 pub const batchReduce = parallel.batchReduce;
+pub const BatchConfig = parallel.BatchConfig;
+pub const SplitStrategy = parallel.SplitStrategy;
+pub const computeSplits = parallel.computeSplits;
 pub const Par = parallel.Par;
 pub const parZip = parallel.parZip;
 pub const parSequence = parallel.parSequence;
 pub const parTraverse = parallel.parTraverse;
 pub const parMap = parallel.parMap;
 pub const parFilter = parallel.parFilter;
+// 调度器接口（预留实现）
+pub const Task = parallel.Task;
+pub const TaskStatus = parallel.TaskStatus;
+pub const TaskPriority = parallel.TaskPriority;
+pub const TaskQueue = parallel.TaskQueue;
+pub const Scheduler = parallel.Scheduler;
+pub const SchedulerConfig = parallel.SchedulerConfig;
+pub const FixedThreadPool = parallel.FixedThreadPool;
+pub const WorkStealingScheduler = parallel.WorkStealingScheduler;
+pub const LoadBalancer = parallel.LoadBalancer;
+pub const LoadBalanceStrategy = parallel.LoadBalanceStrategy;
 
 /// Random - 随机数效果
 pub const random = @import("random.zig");
