@@ -326,6 +326,34 @@ pub const TreeZipper = zipper.TreeZipper;
 pub const listZipper = zipper.listZipper;
 pub const treeZipper = zipper.treeZipper;
 
+/// Semigroup - 结合操作的代数结构
+pub const semigroup = @import("semigroup.zig");
+pub const Semigroup = semigroup.Semigroup;
+pub const sumSemigroupI32 = semigroup.sumSemigroup(i32);
+pub const productSemigroupI32 = semigroup.productSemigroup(i32);
+pub const maxSemigroupI32 = semigroup.maxSemigroup(i32);
+pub const minSemigroupI32 = semigroup.minSemigroup(i32);
+pub const allSemigroupBool = semigroup.allSemigroup;
+pub const anySemigroupBool = semigroup.anySemigroup;
+pub const stringSemigroupAlloc = semigroup.stringSemigroupAlloc;
+pub const arraySemigroupAlloc = semigroup.arraySemigroupAlloc;
+pub const functionSemigroup = semigroup.functionSemigroup;
+pub const optionSemigroup = semigroup.optionSemigroup;
+
+/// Functor - 可映射的类型构造器
+pub const functor = @import("functor.zig");
+pub const FunctorIdentity = functor.Identity;
+pub const optionFunctor = functor.optionFunctor;
+pub const identityFunctor = functor.identityFunctor;
+
+/// Alternative - 选择和重复操作
+pub const alternative = @import("alternative.zig");
+pub const emptyOption = alternative.emptyOption;
+pub const orOption = alternative.orOption;
+pub const manyOption = alternative.manyOption;
+pub const someOption = alternative.someOption;
+pub const optionalOption = alternative.optionalOption;
+
 // ============ 测试 ============
 
 test {

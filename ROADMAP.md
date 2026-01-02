@@ -120,15 +120,61 @@ src/
 | `arrow.zig` | ✅ | Arrow - 函数抽象 |
 | `comonad.zig` | ✅ | Comonad - Identity/NonEmpty/Store/Env/Traced |
 
-### v0.5.0 - 未来计划
+### v0.5.0 - Advanced Abstractions ✅
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `bifunctor.zig` | ⏳ | Bifunctor - 双参数 Functor |
-| `profunctor.zig` | ⏳ | Profunctor - 逆变/协变 |
-| `optics.zig` | ⏳ | Prism/Iso/Affine (Lens 扩展) |
-| `stream.zig` | ⏳ | 惰性流 / 无限序列 |
-| `zipper.zig` | ⏳ | Zipper - 可导航数据结构 |
+| `bifunctor.zig` | ✅ | Bifunctor - 双参数 Functor (Pair/Either/Result/These) |
+| `profunctor.zig` | ✅ | Profunctor - 逆变/协变 (Function/Star/Costar/Strong/Choice) |
+| `optics.zig` | ✅ | Optics - Prism/Iso/Affine/Getter/Setter/Fold |
+| `stream.zig` | ✅ | Stream - 惰性流 / 无限序列 (iterate/repeat/cycle/unfold) |
+| `zipper.zig` | ✅ | Zipper - 可导航数据结构 (ListZipper/TreeZipper) |
+
+### v0.6.0 - 代数结构基础 ✅
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `semigroup.zig` | ✅ | Semigroup - 半群，Monoid 的基础 |
+| `functor.zig` | ✅ | Functor - 可映射的类型构造器 |
+| `alternative.zig` | ✅ | Alternative - 选择和重复操作 |
+
+### v0.7.0 - Monad 组合与实用工具
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `mtl.zig` | ⏳ | Monad Transformer Library - EitherT/OptionT/StateT/ReaderT/WriterT |
+| `prelude.zig` | ⏳ | Prelude - 常用函数、类型别名和运算符重载 |
+| `category.zig` | ⏳ | Category Theory - 范畴论基础抽象 |
+| `distributive.zig` | ⏳ | Distributive Laws - 分配律实现 |
+| `selective.zig` | ⏳ | Selective Applicative Functors - 选择性应用函子 |
+
+### v0.8.0 - 性能优化与基准测试
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `benchmark.zig` | ⏳ | 性能基准测试框架 - 各抽象性能对比 |
+| `async.zig` | ⏳ | 异步抽象 (待Zig async稳定) - Future/Promise/Async Monad |
+| `parallel.zig` | ⏳ | 并行计算抽象 - Par Monad/并行Traversable |
+| `effect.zig` | ⏳ | 扩展Effect System - 更多内置效果类型 |
+
+### v0.9.0 - 实用工具与集成
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `json.zig` | ⏳ | JSON 处理 - 函数式JSON编解码 |
+| `http.zig` | ⏳ | HTTP客户端 - 函数式HTTP抽象 |
+| `codec.zig` | ⏳ | 编解码器 - 序列化/反序列化 |
+| `validation.zig` | ⏳ | 数据验证 - 组合式验证器 |
+
+### v1.0.0 - 稳定版本
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| API稳定化 | ⏳ | 冻结公共API，确保向后兼容 |
+| 全面测试 | ⏳ | 100%测试覆盖率 |
+| 性能优化 | ⏳ | 编译时优化和运行时性能调优 |
+| 文档完善 | ⏳ | 用户指南、API文档、示例代码 |
+| 生态系统 | ⏳ | 社区贡献和第三方集成 |
 
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 待官方稳定后可考虑添加异步抽象模块。
