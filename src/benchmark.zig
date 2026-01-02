@@ -370,6 +370,329 @@ pub const MonadBenchmarks = struct {
     }
 };
 
+/// Lazy 求值性能测试
+pub const LazyBenchmarks = struct {
+    const lazy_mod = @import("lazy.zig");
+
+    /// Lazy 求值开销测量
+    pub fn benchmarkLazyOverhead(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 直接计算
+        const DirectTest = struct {
+            fn run() void {
+                var sum: i32 = 0;
+                for (0..100) |i| {
+                    sum += @as(i32, @intCast(i));
+                }
+                std.mem.doNotOptimizeAway(sum);
+            }
+        };
+
+        // 使用 Lazy
+        const LazyTest = struct {
+            fn compute() i32 {
+                var sum: i32 = 0;
+                for (0..100) |i| {
+                    sum += @as(i32, @intCast(i));
+                }
+                return sum;
+            }
+
+            fn run() void {
+                var lazy = lazy_mod.Lazy(i32).init(compute);
+                const val = lazy.force();
+                std.mem.doNotOptimizeAway(val);
+            }
+        };
+
+        // 运行直接计算测试
+        const bench_result1 = try runBenchmark(allocator, "Direct computation", DirectTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Lazy 测试
+        const bench_result2 = try runBenchmark(allocator, "Lazy computation", LazyTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// Pipe 性能测试
+pub const PipeBenchmarks = struct {
+    const pipe_mod = @import("pipe.zig");
+
+    /// Pipe vs 手动链式调用
+    pub fn benchmarkPipeVsManual(allocator: std.mem.Allocator) !BenchmarkResult {
+        const Double = struct {
+            fn run(x: i32) i32 {
+                return x * 2;
+            }
+        };
+
+        const AddOne = struct {
+            fn run(x: i32) i32 {
+                return x + 1;
+            }
+        };
+
+        const Square = struct {
+            fn run(x: i32) i32 {
+                return x * x;
+            }
+        };
+
+        // 手动链式调用
+        const ManualTest = struct {
+            fn run() void {
+                var val: i32 = 5;
+                val = Double.run(val);
+                val = AddOne.run(val);
+                val = Square.run(val);
+                std.mem.doNotOptimizeAway(val);
+            }
+        };
+
+        // 使用 Pipe
+        const PipeTest = struct {
+            fn run() void {
+                const val = pipe_mod.Pipe(i32).init(5)
+                    .then(i32, Double.run)
+                    .then(i32, AddOne.run)
+                    .then(i32, Square.run)
+                    .unwrap();
+                std.mem.doNotOptimizeAway(val);
+            }
+        };
+
+        // 运行手动测试
+        const bench_result1 = try runBenchmark(allocator, "Manual chain", ManualTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Pipe 测试
+        const bench_result2 = try runBenchmark(allocator, "Pipe chain", PipeTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// State Monad 性能测试
+pub const StateBenchmarks = struct {
+    const state_mod = @import("state.zig");
+
+    /// State Monad vs 可变状态
+    pub fn benchmarkStateVsMutable(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 可变状态
+        const MutableTest = struct {
+            fn run() void {
+                var state: i32 = 0;
+                for (0..100) |_| {
+                    state += 1;
+                }
+                std.mem.doNotOptimizeAway(state);
+            }
+        };
+
+        // State Monad
+        const StateTest = struct {
+            fn run() void {
+                const counter = state_mod.State(i32, i32).init(struct {
+                    fn op(s: i32) struct { i32, i32 } {
+                        return .{ s, s + 1 };
+                    }
+                }.op);
+
+                var s: i32 = 0;
+                for (0..100) |_| {
+                    const state_result = counter.runState(s);
+                    s = state_result[1];
+                }
+                std.mem.doNotOptimizeAway(s);
+            }
+        };
+
+        // 运行可变状态测试
+        const bench_result1 = try runBenchmark(allocator, "Mutable state", MutableTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 State Monad 测试
+        const bench_result2 = try runBenchmark(allocator, "State Monad", StateTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// 高级抽象性能测试
+pub const AdvancedBenchmarks = struct {
+    const lens_mod = @import("lens.zig");
+
+    const Point = struct {
+        x: i32,
+        y: i32,
+    };
+
+    const pointXGet = struct {
+        fn f(p: Point) i32 {
+            return p.x;
+        }
+    }.f;
+
+    const pointXSet = struct {
+        fn f(p: Point, x: i32) Point {
+            return Point{ .x = x, .y = p.y };
+        }
+    }.f;
+
+    /// Lens vs 直接字段访问
+    pub fn benchmarkLensVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {
+        // 直接字段访问
+        const DirectTest = struct {
+            fn run() void {
+                var point = Point{ .x = 10, .y = 20 };
+                for (0..100) |_| {
+                    point = Point{ .x = point.x + 1, .y = point.y };
+                }
+                std.mem.doNotOptimizeAway(point);
+            }
+        };
+
+        // 使用 Lens
+        const LensTest = struct {
+            fn run() void {
+                const pointXLens = lens_mod.Lens(Point, i32).init(pointXGet, pointXSet);
+                var point = Point{ .x = 10, .y = 20 };
+                for (0..100) |_| {
+                    point = pointXLens.put(point, pointXLens.view(point) + 1);
+                }
+                std.mem.doNotOptimizeAway(point);
+            }
+        };
+
+        // 运行直接访问测试
+        const bench_result1 = try runBenchmark(allocator, "Direct field access", DirectTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行 Lens 测试
+        const bench_result2 = try runBenchmark(allocator, "Lens access", LensTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+// ============ 性能洞察分析 ============
+
+/// 性能对比结果
+pub const PerformanceComparison = struct {
+    baseline_name: []const u8,
+    comparison_name: []const u8,
+    baseline_mean: f64,
+    comparison_mean: f64,
+    speedup: f64,
+    overhead_percent: f64,
+};
+
+/// 比较两个基准测试结果
+pub fn compareResults(baseline: BenchmarkResult, comparison: BenchmarkResult) PerformanceComparison {
+    const speedup = baseline.mean_duration / comparison.mean_duration;
+    const overhead_percent = ((comparison.mean_duration - baseline.mean_duration) / baseline.mean_duration) * 100.0;
+
+    return PerformanceComparison{
+        .baseline_name = baseline.name,
+        .comparison_name = comparison.name,
+        .baseline_mean = baseline.mean_duration,
+        .comparison_mean = comparison.mean_duration,
+        .speedup = speedup,
+        .overhead_percent = overhead_percent,
+    };
+}
+
+/// 生成性能报告 (Markdown 格式)
+pub fn generateMarkdownReport(allocator: std.mem.Allocator, results: []const BenchmarkResult) ![]u8 {
+    var buffer = std.ArrayList(u8).init(allocator);
+    const writer = buffer.writer();
+
+    try writer.writeAll("# Performance Benchmark Report\n\n");
+    try writer.writeAll("| Benchmark | Iterations | Mean (ns) | Std Dev (ns) | Min (ns) | Max (ns) |\n");
+    try writer.writeAll("|-----------|------------|-----------|--------------|----------|----------|\n");
+
+    for (results) |res| {
+        try writer.print("| {s} | {} | {d:.2} | {d:.2} | {} | {} |\n", .{
+            res.name,
+            res.iterations,
+            res.mean_duration,
+            res.std_deviation,
+            res.min_duration,
+            res.max_duration,
+        });
+    }
+
+    try writer.writeAll("\n## Summary\n\n");
+    for (results) |res| {
+        try writer.print("- **{s}**: Average {d:.2}ns per operation\n", .{
+            res.name,
+            res.mean_duration,
+        });
+    }
+
+    return buffer.toOwnedSlice(allocator);
+}
+
+/// 生成 JSON 报告
+pub fn generateJsonReport(allocator: std.mem.Allocator, results: []const BenchmarkResult) ![]u8 {
+    var buffer = std.ArrayList(u8).init(allocator);
+    const writer = buffer.writer();
+
+    try writer.writeAll("{\n  \"benchmarks\": [\n");
+
+    for (results, 0..) |res, i| {
+        try writer.print("    {{\n", .{});
+        try writer.print("      \"name\": \"{s}\",\n", .{res.name});
+        try writer.print("      \"iterations\": {},\n", .{res.iterations});
+        try writer.print("      \"mean_ns\": {d:.2},\n", .{res.mean_duration});
+        try writer.print("      \"std_deviation_ns\": {d:.2},\n", .{res.std_deviation});
+        try writer.print("      \"min_ns\": {},\n", .{res.min_duration});
+        try writer.print("      \"max_ns\": {}\n", .{res.max_duration});
+        if (i < results.len - 1) {
+            try writer.writeAll("    },\n");
+        } else {
+            try writer.writeAll("    }\n");
+        }
+    }
+
+    try writer.writeAll("  ]\n}\n");
+
+    return buffer.toOwnedSlice(allocator);
+}
+
+/// 识别最快的实现
+pub fn findFastest(results: []const BenchmarkResult) ?BenchmarkResult {
+    if (results.len == 0) return null;
+
+    var fastest = results[0];
+    for (results[1..]) |res| {
+        if (res.mean_duration < fastest.mean_duration) {
+            fastest = res;
+        }
+    }
+    return fastest;
+}
+
+/// 生成性能建议
+pub fn generateRecommendations(allocator: std.mem.Allocator, results: []const BenchmarkResult) ![]const u8 {
+    _ = results;
+    // 简化实现：返回通用建议
+    const recommendations =
+        \\Performance Recommendations:
+        \\1. Consider using Lazy for expensive computations that may not always be needed
+        \\2. Pipe has minimal overhead and improves code readability
+        \\3. State Monad is suitable for complex state transformations
+        \\4. Lens provides a clean API with acceptable overhead for most use cases
+        \\
+    ;
+    return try allocator.dupe(u8, recommendations);
+}
+
 // ============ 测试 ============
 
 test "Benchmark basic functionality" {
