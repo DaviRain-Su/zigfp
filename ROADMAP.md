@@ -44,7 +44,11 @@ src/
 ├── foldable.zig     # Foldable - 折叠操作
 ├── traversable.zig  # Traversable - 效果遍历
 ├── arrow.zig        # Arrow - 函数抽象
-└── comonad.zig      # Comonad - Monad 的对偶
+├── comonad.zig      # Comonad - Monad 的对偶
+├── benchmark.zig    # 性能基准测试框架 (v0.8.0)
+├── mtl.zig          # Monad Transformers (v0.7.0)
+├── selective.zig    # Selective Applicative Functors (v0.7.0)
+└── file_system.zig  # FileSystem Effect (v0.8.0)
 ```
 
 ## 版本路线图
@@ -153,9 +157,9 @@ src/
 | 模块 | 状态 | 说明 |
 |------|------|------|
 | `benchmark.zig` | 🔄 | 性能基准测试框架 - 各抽象性能对比 |
-| `async.zig` | ⏳ | 异步抽象 (待Zig async稳定) - Future/Promise/Async Monad |
+| `async.zig` | 🚀 | 异步抽象 (未来实现) - Future/Promise/Async Monad |
 | `parallel.zig` | ⏳ | 并行计算抽象 - Par Monad/并行Traversable |
-| `effect.zig` | ⏳ | 扩展Effect System - 更多内置效果类型 |
+| `effect.zig` | ✅ | 扩展Effect System - FileSystem效果完成 |
 
 ### v0.9.0 - 实用工具与集成
 
@@ -177,7 +181,7 @@ src/
 | 生态系统 | ⏳ | 社区贡献和第三方集成 |
 
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
-> 待官方稳定后可考虑添加异步抽象模块。
+> 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 
 ## 特性对照表
 

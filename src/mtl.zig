@@ -19,7 +19,7 @@ const std = @import("std");
 const Option = @import("option.zig").Option;
 const Result = @import("result.zig").Result;
 
-/// Identity Monad - 最简单的 Monad，用于构建其他 Monad
+/// Identity Monad - simplest Monad for building other Monads
 pub fn Identity(comptime A: type) type {
     return struct {
         value: A,
@@ -45,7 +45,7 @@ pub fn Identity(comptime A: type) type {
 }
 
 /// EitherT(M, E, A) - Either Monad Transformer
-/// 将 Either 功能添加到任意 Monad M
+/// Adds Either functionality to any Monad M
 pub fn EitherT(comptime M: type, comptime E: type, comptime A: type) type {
     return struct {
         /// 内部 Monad 类型: M(Either(E, A))

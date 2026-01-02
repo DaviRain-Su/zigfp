@@ -1,15 +1,15 @@
-//! 性能基准测试框架
+//! Performance benchmark framework
 //!
-//! 为zigFP库提供全面的性能基准测试功能，用于：
-//! - 比较不同抽象的性能开销
-//! - 识别性能瓶颈
-//! - 指导优化决策
-//! - 为用户提供性能参考数据
+//! Provides comprehensive performance benchmarking capabilities for zigFP library:
+//! - Compare performance overhead of different abstractions
+//! - Identify performance bottlenecks
+//! - Guide optimization decisions
+//! - Provide performance reference data for users
 //!
-//! 核心特性:
-//! - 高精度时间测量 (纳秒级)
-//! - 统计分析 (平均值、标准差、中位数)
-//! - 简单的API设计
+//! Core features:
+//! - High-precision time measurement (nanosecond level)
+//! - Statistical analysis (mean, standard deviation, median)
+//! - Simple API design
 
 const std = @import("std");
 const Allocator = std.mem.Allocator;

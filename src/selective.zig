@@ -87,7 +87,7 @@ pub const selective = struct {
             return ifS(void, opt_condition, action, Option(void).Some({}));
         }
 
-        /// selectM: 选择多个选项中的第一个成功者
+        /// selectM: Select first successful option from multiple choices
         pub fn selectM(
             comptime A: type,
             comptime B: type,

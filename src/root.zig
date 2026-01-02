@@ -389,6 +389,14 @@ pub const Benchmark = benchmark.Benchmark;
 pub const BenchmarkResult = benchmark.BenchmarkResult;
 pub const runBenchmark = benchmark.runBenchmark;
 
+/// FileSystem - 文件系统效果
+pub const file_system = @import("file_system.zig");
+pub const FileSystemEffect = file_system.FileSystemEffect;
+pub const FileSystemHandler = file_system.FileSystemHandler;
+pub const readFile = file_system.readFile;
+pub const writeFile = file_system.writeFile;
+pub const fileExists = file_system.fileExists;
+
 // ============ 测试 ============
 
 test {

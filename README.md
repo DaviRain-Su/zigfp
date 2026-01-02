@@ -123,6 +123,24 @@ const sum = fp.sumMonoid.concat(&numbers);  // 15
 | `FunctionArrow(A, B)` | Arrow - 函数抽象, 组合, 扇出 |
 | `Identity/Store/Env(A)` | Comonad - extract, extend |
 
+### Monad 组合 (v0.7.0)
+
+| 模块 | 说明 |
+|------|------|
+| `prelude.zig` | Prelude - 常用函数、类型别名和运算符重载 |
+| `category.zig` | Category Theory - 函数范畴、Kleisli范畴 |
+| `mtl.zig` | Monad Transformers - EitherT, OptionT, StateT, ReaderT, WriterT |
+| `selective.zig` | Selective Applicative Functors - 条件选择抽象 |
+| `distributive.zig` | Distributive Laws - 分配律实现 |
+
+### 性能与扩展 (v0.8.0)
+
+| 模块 | 说明 |
+|------|------|
+| `benchmark.zig` | 性能基准测试框架 - 各抽象性能对比 |
+| `file_system.zig` | FileSystem Effect - 函数式文件操作 |
+| `effect.zig` | Effect System 扩展 - 更多内置效果类型 |
+
 ## 示例
 
 ### Option 链式处理
@@ -242,6 +260,10 @@ zig build test
 - [Traversable](docs/traversable.md)
 - [Arrow](docs/arrow.md)
 - [Comonad](docs/comonad.md)
+- [Benchmark](docs/benchmark.md)
+- [MTL](docs/mtl.md)
+- [Selective](docs/selective.md)
+- [FileSystem Effect](docs/file_system.md)
 
 ## Zig 版本
 
