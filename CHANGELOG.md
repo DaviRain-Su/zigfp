@@ -1,5 +1,101 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.7.0] - 2026-01-02 - 函数增强与 Curry ✅
+
+### 🎯 新增功能
+
+#### 柯里化 (Currying) - `src/function/function.zig`
+
+实现了经典函数式编程的柯里化支持：
+
+- **`Curry2`** - 二元函数柯里化类型
+- **`Curry2Applied`** - 已应用第一个参数的柯里化函数
+- **`curry2`** - 创建二元柯里化函数
+- **`Curry3`** - 三元函数柯里化类型
+- **`Curry3Applied1`/`Curry3Applied2`** - 逐步应用的三元柯里化
+- **`curry3`** - 创建三元柯里化函数
+- **`uncurry2Call`/`uncurry3Call`** - 反柯里化调用
+- **`Const`/`const_`** - 常量函数
+
+```zig
+const add = struct { fn f(a: i32, b: i32) i32 { return a + b; } }.f;
+const curriedAdd = curry2(i32, i32, i32, add);
+const add5 = curriedAdd.apply(5);
+const result = add5.apply(3); // 8
+```
+
+#### 增强管道 (Pipe) - `src/function/pipe.zig`
+
+扩展了 `Pipe` 类型的操作符：
+
+- **`map`** - 映射操作（then 的别名）
+- **`filter`** - 条件过滤，返回 Option
+- **`satisfies`** - 检查值是否满足谓词
+- **`zip`** - 将值与另一个值配对
+- **`toOption`** - 包装到 Option 类型
+- **`branch`** - 条件分支选择不同转换
+- **`repeat`** - 重复应用函数 n 次
+- **`effect`** - tap 的别名
+- **`debug`** - 调试输出辅助
+
+新增 **`OptionPipe`** 类型 - 处理可选值的管道：
+
+- `map`/`flatMap` - 映射和扁平映射
+- `filter` - 条件过滤
+- `unwrapOr`/`unwrapOrElse` - 获取值或默认值
+- `isSome`/`isNone` - 检查是否有值
+- `ifSome`/`ifNone` - 条件执行副作用
+- `and_`/`or_` - 逻辑组合
+- `toPipe` - 转换为普通 Pipe
+
+```zig
+const result = OptionPipe(i32).some(5)
+    .map(i32, double)      // Some(10)
+    .filter(isPositive)    // Some(10)
+    .flatMap(i32, safeDivide)
+    .unwrapOr(0);
+```
+
+#### 更多 Monoid 实例 - `src/algebra/monoid.zig`
+
+新增多个 Monoid 实例：
+
+**浮点数 Monoid**:
+- `sumMonoidF64` / `productMonoidF64` - f64 加法/乘法
+- `sumMonoidF32` / `productMonoidF32` - f32 加法/乘法
+
+**First/Last Monoid**:
+- `First(T)` - 保留第一个非空值的包装类型
+- `firstMonoid(T)` - First Monoid
+- `Last(T)` - 保留最后一个非空值的包装类型
+- `lastMonoid(T)` - Last Monoid
+
+**Endo/Dual Monoid**:
+- `Endo(T)` - 自函数包装类型 (T -> T)
+- `endoMonoid(T)` - 函数组合 Monoid
+- `Dual(T)` - 反转组合顺序的包装类型
+- `DualMonoid` - 创建 Dual Monoid 的工具
+- `dualSumMonoidI32` / `dualSubMonoidI32` - 预定义 Dual 实例
+
+### 🐛 Bug 修复
+
+- 修复 Windows 上 `receiveFromWindows` 未检查 socket 是否绑定的问题
+  - 现在正确返回 `NotBound` 错误当 socket 为 null 时
+
+### 📦 导出更新
+
+- `root.zig` 新增导出：Curry2, curry2, Curry3, curry3, OptionPipe, First, Last, Endo, Dual 等
+- `function/mod.zig` 导出所有柯里化和增强管道类型
+- `algebra/mod.zig` 导出所有新 Monoid 实例
+
+### 📊 测试统计
+
+- 新增 47 个测试
+- 总测试数：789 tests
+- 所有测试通过，无内存泄漏
+
+---
+
 ## [v1.6.1] - 2026-01-02 - Windows 跨平台兼容性修复 ✅
 
 ### 🐛 Bug 修复

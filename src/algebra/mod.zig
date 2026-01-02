@@ -41,6 +41,26 @@ pub const productMonoidI32 = monoid.productMonoidI32;
 pub const maxMonoidI32 = monoid.maxMonoidI32;
 pub const minMonoidI32 = monoid.minMonoidI32;
 
+// ============ Float Monoid ============
+pub const sumMonoidF64 = monoid.sumMonoidF64;
+pub const productMonoidF64 = monoid.productMonoidF64;
+pub const sumMonoidF32 = monoid.sumMonoidF32;
+pub const productMonoidF32 = monoid.productMonoidF32;
+
+// ============ First/Last Monoid ============
+pub const First = monoid.First;
+pub const firstMonoid = monoid.firstMonoid;
+pub const Last = monoid.Last;
+pub const lastMonoid = monoid.lastMonoid;
+
+// ============ Endo/Dual Monoid ============
+pub const Endo = monoid.Endo;
+pub const endoMonoid = monoid.endoMonoid;
+pub const Dual = monoid.Dual;
+pub const DualMonoid = monoid.DualMonoid;
+pub const dualSumMonoidI32 = monoid.dualSumMonoidI32;
+pub const dualSubMonoidI32 = monoid.dualSubMonoidI32;
+
 // ============ Alternative ============
 pub const emptyOption = alternative.emptyOption;
 pub const orOption = alternative.orOption;

@@ -83,8 +83,21 @@ pub const identity = function.identity;
 pub const flip = function.flip;
 pub const Pipe = function.Pipe;
 pub const pipe = function.pipe;
+pub const OptionPipe = function.OptionPipe;
+pub const optionPipe = function.optionPipe;
 pub const Memoized = function.Memoized;
 pub const memoize = function.memoizeFn;
+
+// Curry
+pub const Curry2 = function.Curry2;
+pub const Curry2Applied = function.Curry2Applied;
+pub const curry2 = function.curry2;
+pub const Curry3 = function.Curry3;
+pub const curry3 = function.curry3;
+pub const uncurry2Call = function.uncurry2Call;
+pub const uncurry3Call = function.uncurry3Call;
+pub const Const = function.Const;
+pub const const_ = function.const_;
 
 // Monad
 pub const Reader = monad.Reader;
@@ -103,6 +116,16 @@ pub const Monoid = algebra.Monoid;
 pub const Semigroup = algebra.Semigroup;
 pub const sumMonoid = algebra.monoid.sumMonoid;
 pub const productMonoid = algebra.monoid.productMonoid;
+pub const sumMonoidF64 = algebra.sumMonoidF64;
+pub const productMonoidF64 = algebra.productMonoidF64;
+pub const First = algebra.First;
+pub const firstMonoid = algebra.firstMonoid;
+pub const Last = algebra.Last;
+pub const lastMonoid = algebra.lastMonoid;
+pub const Endo = algebra.Endo;
+pub const endoMonoid = algebra.endoMonoid;
+pub const Dual = algebra.Dual;
+pub const DualMonoid = algebra.DualMonoid;
 
 // Optics
 pub const Lens = optics.Lens;

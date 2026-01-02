@@ -196,7 +196,10 @@ pub const UdpSocket = struct {
     else
         receiveFromPosix;
 
-    fn receiveFromWindows(_: *Self, _: []u8) UdpError!ReceiveResult {
+    fn receiveFromWindows(self: *Self, _: []u8) UdpError!ReceiveResult {
+        // Check if socket is bound first (same as POSIX version)
+        if (self.socket == null) return UdpError.NotBound;
+        // Windows doesn't support posix.recvfrom without libc linking
         return UdpError.ReceiveFailed;
     }
 

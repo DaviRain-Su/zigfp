@@ -124,6 +124,214 @@ pub fn partial(
     return Partial(A, B, C).init(f, a);
 }
 
+// ============ 柯里化 (Currying) ============
+
+/// Curry2 类型 - 二元函数的柯里化结果
+/// 由于 Zig 不支持闭包，使用结构体存储中间状态
+pub fn Curry2(comptime A: type, comptime B: type, comptime C: type) type {
+    return struct {
+        f: *const fn (A, B) C,
+
+        const Self = @This();
+
+        /// 创建柯里化函数
+        pub fn init(f: *const fn (A, B) C) Self {
+            return .{ .f = f };
+        }
+
+        /// 应用第一个参数，返回等待第二个参数的结构体
+        pub fn apply(self: Self, a: A) Curry2Applied(A, B, C) {
+            return Curry2Applied(A, B, C).init(self.f, a);
+        }
+
+        /// 直接调用原函数
+        pub fn call(self: Self, a: A, b: B) C {
+            return self.f(a, b);
+        }
+    };
+}
+
+/// Curry2Applied - 已应用第一个参数的柯里化函数
+pub fn Curry2Applied(comptime A: type, comptime B: type, comptime C: type) type {
+    return struct {
+        f: *const fn (A, B) C,
+        a: A,
+
+        const Self = @This();
+
+        pub fn init(f: *const fn (A, B) C, a: A) Self {
+            return .{ .f = f, .a = a };
+        }
+
+        /// 应用第二个参数，返回结果
+        pub fn apply(self: Self, b: B) C {
+            return self.f(self.a, b);
+        }
+
+        /// 别名
+        pub fn call(self: Self, b: B) C {
+            return self.apply(b);
+        }
+    };
+}
+
+/// 创建二元柯里化函数
+pub fn curry2(
+    comptime A: type,
+    comptime B: type,
+    comptime C: type,
+    f: *const fn (A, B) C,
+) Curry2(A, B, C) {
+    return Curry2(A, B, C).init(f);
+}
+
+/// Curry3 类型 - 三元函数的柯里化结果
+pub fn Curry3(comptime A: type, comptime B: type, comptime C: type, comptime D: type) type {
+    return struct {
+        f: *const fn (A, B, C) D,
+
+        const Self = @This();
+
+        pub fn init(f: *const fn (A, B, C) D) Self {
+            return .{ .f = f };
+        }
+
+        /// 应用第一个参数
+        pub fn apply(self: Self, a: A) Curry3Applied1(A, B, C, D) {
+            return Curry3Applied1(A, B, C, D).init(self.f, a);
+        }
+
+        /// 直接调用原函数
+        pub fn call(self: Self, a: A, b: B, c: C) D {
+            return self.f(a, b, c);
+        }
+    };
+}
+
+/// Curry3Applied1 - 已应用第一个参数
+pub fn Curry3Applied1(comptime A: type, comptime B: type, comptime C: type, comptime D: type) type {
+    return struct {
+        f: *const fn (A, B, C) D,
+        a: A,
+
+        const Self = @This();
+
+        pub fn init(f: *const fn (A, B, C) D, a: A) Self {
+            return .{ .f = f, .a = a };
+        }
+
+        /// 应用第二个参数
+        pub fn apply(self: Self, b: B) Curry3Applied2(A, B, C, D) {
+            return Curry3Applied2(A, B, C, D).init(self.f, self.a, b);
+        }
+    };
+}
+
+/// Curry3Applied2 - 已应用前两个参数
+pub fn Curry3Applied2(comptime A: type, comptime B: type, comptime C: type, comptime D: type) type {
+    return struct {
+        f: *const fn (A, B, C) D,
+        a: A,
+        b: B,
+
+        const Self = @This();
+
+        pub fn init(f: *const fn (A, B, C) D, a: A, b: B) Self {
+            return .{ .f = f, .a = a, .b = b };
+        }
+
+        /// 应用第三个参数，返回最终结果
+        pub fn apply(self: Self, c: C) D {
+            return self.f(self.a, self.b, c);
+        }
+
+        pub fn call(self: Self, c: C) D {
+            return self.apply(c);
+        }
+    };
+}
+
+/// 创建三元柯里化函数
+pub fn curry3(
+    comptime A: type,
+    comptime B: type,
+    comptime C: type,
+    comptime D: type,
+    f: *const fn (A, B, C) D,
+) Curry3(A, B, C, D) {
+    return Curry3(A, B, C, D).init(f);
+}
+
+/// 反柯里化：将 Curry2 转换回普通二元函数
+pub fn uncurry2(
+    comptime A: type,
+    comptime B: type,
+    comptime C: type,
+    curried: Curry2(A, B, C),
+) *const fn (A, B) C {
+    _ = curried;
+    return struct {
+        fn uncurried(a: A, b: B) C {
+            // 由于我们需要访问原始函数，这里返回一个新函数
+            // 在实际使用中，可以直接调用 curried.call(a, b)
+            _ = a;
+            _ = b;
+            unreachable; // 实际实现见下面的 uncurry2Call
+        }
+    }.uncurried;
+}
+
+/// 更实用的反柯里化：直接调用
+pub fn uncurry2Call(
+    comptime A: type,
+    comptime B: type,
+    comptime C: type,
+    curried: Curry2(A, B, C),
+    a: A,
+    b: B,
+) C {
+    return curried.call(a, b);
+}
+
+/// 更实用的反柯里化：直接调用三元函数
+pub fn uncurry3Call(
+    comptime A: type,
+    comptime B: type,
+    comptime C: type,
+    comptime D: type,
+    curried: Curry3(A, B, C, D),
+    a: A,
+    b: B,
+    c: C,
+) D {
+    return curried.call(a, b, c);
+}
+
+// ============ 常量函数 ============
+
+/// 常量函数：忽略参数，始终返回固定值
+/// const_(x)(y) = x
+pub fn Const(comptime A: type, comptime B: type) type {
+    return struct {
+        value: A,
+
+        const Self = @This();
+
+        pub fn init(value: A) Self {
+            return .{ .value = value };
+        }
+
+        pub fn apply(self: Self, _: B) A {
+            return self.value;
+        }
+    };
+}
+
+/// 创建常量函数
+pub fn const_(comptime A: type, comptime B: type, value: A) Const(A, B) {
+    return Const(A, B).init(value);
+}
+
 // ============ 测试 ============
 
 const double = struct {
@@ -250,4 +458,121 @@ test "partial application" {
     const add5 = partial(i32, i32, i32, add, 5);
     try std.testing.expectEqual(@as(i32, 8), add5.call(3));
     try std.testing.expectEqual(@as(i32, 15), add5.call(10));
+}
+
+// ============ 柯里化测试 ============
+
+test "curry2 basic" {
+    const add = struct {
+        fn f(a: i32, b: i32) i32 {
+            return a + b;
+        }
+    }.f;
+
+    const curriedAdd = curry2(i32, i32, i32, add);
+
+    // 直接调用
+    try std.testing.expectEqual(@as(i32, 8), curriedAdd.call(3, 5));
+
+    // 柯里化调用
+    const add3 = curriedAdd.apply(3);
+    try std.testing.expectEqual(@as(i32, 8), add3.apply(5));
+    try std.testing.expectEqual(@as(i32, 13), add3.apply(10));
+}
+
+test "curry2 with different types" {
+    const repeat = struct {
+        fn f(s: []const u8, n: i32) i32 {
+            return @as(i32, @intCast(s.len)) * n;
+        }
+    }.f;
+
+    const curriedRepeat = curry2([]const u8, i32, i32, repeat);
+    const repeatHello = curriedRepeat.apply("hello");
+
+    try std.testing.expectEqual(@as(i32, 15), repeatHello.apply(3));
+    try std.testing.expectEqual(@as(i32, 25), repeatHello.apply(5));
+}
+
+test "curry3 basic" {
+    const add3 = struct {
+        fn f(a: i32, b: i32, c: i32) i32 {
+            return a + b + c;
+        }
+    }.f;
+
+    const curried = curry3(i32, i32, i32, i32, add3);
+
+    // 直接调用
+    try std.testing.expectEqual(@as(i32, 6), curried.call(1, 2, 3));
+
+    // 逐步应用
+    const add1 = curried.apply(1);
+    const add1_2 = add1.apply(2);
+    try std.testing.expectEqual(@as(i32, 6), add1_2.apply(3));
+    try std.testing.expectEqual(@as(i32, 13), add1_2.apply(10));
+}
+
+test "curry3 multiply" {
+    const mul3 = struct {
+        fn f(a: i32, b: i32, c: i32) i32 {
+            return a * b * c;
+        }
+    }.f;
+
+    const curried = curry3(i32, i32, i32, i32, mul3);
+    const mul2 = curried.apply(2);
+    const mul2_3 = mul2.apply(3);
+
+    try std.testing.expectEqual(@as(i32, 24), mul2_3.apply(4)); // 2 * 3 * 4 = 24
+    try std.testing.expectEqual(@as(i32, 30), mul2_3.apply(5)); // 2 * 3 * 5 = 30
+}
+
+test "uncurry2Call" {
+    const add = struct {
+        fn f(a: i32, b: i32) i32 {
+            return a + b;
+        }
+    }.f;
+
+    const curried = curry2(i32, i32, i32, add);
+    const result = uncurry2Call(i32, i32, i32, curried, 3, 5);
+    try std.testing.expectEqual(@as(i32, 8), result);
+}
+
+test "uncurry3Call" {
+    const add3 = struct {
+        fn f(a: i32, b: i32, c: i32) i32 {
+            return a + b + c;
+        }
+    }.f;
+
+    const curried = curry3(i32, i32, i32, i32, add3);
+    const result = uncurry3Call(i32, i32, i32, i32, curried, 1, 2, 3);
+    try std.testing.expectEqual(@as(i32, 6), result);
+}
+
+test "const_ function" {
+    const always42 = const_(i32, []const u8, 42);
+
+    try std.testing.expectEqual(@as(i32, 42), always42.apply("hello"));
+    try std.testing.expectEqual(@as(i32, 42), always42.apply("world"));
+    try std.testing.expectEqual(@as(i32, 42), always42.apply(""));
+}
+
+test "curry2 with Curry2Applied reuse" {
+    const sub = struct {
+        fn f(a: i32, b: i32) i32 {
+            return a - b;
+        }
+    }.f;
+
+    const curried = curry2(i32, i32, i32, sub);
+    const sub10 = curried.apply(10);
+    const sub20 = curried.apply(20);
+
+    // 10 - 3 = 7
+    try std.testing.expectEqual(@as(i32, 7), sub10.apply(3));
+    // 20 - 3 = 17
+    try std.testing.expectEqual(@as(i32, 17), sub20.apply(3));
 }

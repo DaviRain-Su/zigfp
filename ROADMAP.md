@@ -318,6 +318,27 @@ src/
 | root.zig 导出 | ✅ | 添加更多类型导出供示例使用 |
 | 测试验证 | ✅ | 742 tests 全部通过 |
 
+### v1.6.1 - Windows 跨平台兼容性修复 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| UDP Windows 兼容 | ✅ | 修复 `posix.recvfrom` 在 Windows 上需要 libc 的问题 |
+| getenv Windows 兼容 | ✅ | 修复 `std.posix.getenv` 在 Windows 上不可用的问题 |
+| EnvConfigHandlerAlloc | ✅ | 新增跨平台环境变量处理器 |
+| 测试验证 | ✅ | 742 tests 全部通过（Linux），Windows CI 修复 |
+
+### v1.7.0 - 函数增强与 Curry ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| `curry2`/`curry3` | ✅ | 柯里化 - 将多参函数转为单参函数链 |
+| `uncurry2Call`/`uncurry3Call` | ✅ | 反柯里化调用 |
+| `Const`/`const_` | ✅ | 常量函数 |
+| 增强 Pipe | ✅ | `map`、`filter`、`zip`、`branch`、`repeat`、`debug` |
+| OptionPipe | ✅ | 处理可选值的管道类型 |
+| 更多 Monoid | ✅ | First、Last、Endo、Dual、浮点数 Monoid |
+| 测试验证 | ✅ | 789 tests 全部通过 |
+
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 
