@@ -69,6 +69,7 @@ pub const prelude = @import("prelude.zig");
 pub const Option = core.Option;
 pub const some = core.some;
 pub const none = core.none;
+pub const flatten = core.flatten;
 pub const Result = core.Result;
 pub const ok = core.ok;
 pub const err = core.err;

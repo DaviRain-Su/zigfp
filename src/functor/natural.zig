@@ -6,7 +6,8 @@
 //! 满足自然性条件：对于任何 f: A -> B，η_B ∘ F(f) = G(f) ∘ η_A
 
 const std = @import("std");
-const Option = @import("../core/option.zig").Option;
+const option_mod = @import("../core/option.zig");
+const Option = option_mod.Option;
 const Result = @import("../core/result.zig").Result;
 
 // ============ Option <-> Result 转换 ============
@@ -93,12 +94,10 @@ pub fn sliceAtOption(comptime T: type, slice: []const T, index: usize) Option(T)
 
 /// 展平嵌套的 Option
 /// Option(Option(T)) -> Option(T)
+///
+/// 注意：此函数委托给 core/option.zig 中的 flatten 函数
 pub fn flattenOption(comptime T: type, opt: Option(Option(T))) Option(T) {
-    if (opt.isSome()) {
-        return opt.unwrap();
-    } else {
-        return Option(T).None();
-    }
+    return option_mod.flatten(T, opt);
 }
 
 /// 展平嵌套的 Result

@@ -1,5 +1,62 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v2.2.0] - 2026-01-02 - API 整合与重构 ✅
+
+### 🎯 改进内容
+
+#### Option 类型增强 - `src/core/option.zig`
+
+- **新增 `flatten` 函数**: 展平嵌套的 Option
+  ```zig
+  const nested = Option(Option(i32)).Some(Option(i32).Some(42));
+  const flat = flatten(i32, nested);  // Some(42)
+  ```
+
+#### Alternative 整合 - `src/algebra/alternative.zig`
+
+消除重复实现，所有操作现在委托给 Option 的核心方法：
+
+- `alternative.option.orOp` 现在调用 `Option.or()` 而非重复实现
+- `orOption` 便捷函数调用 `Option.or()`
+- 保持 API 兼容性
+
+#### Natural Transformation 整合 - `src/functor/natural.zig`
+
+- `flattenOption` 现在委托给 `core/option.flatten`
+
+#### Distributive 整合 - `src/functor/distributive.zig`
+
+- `distributive.option.distribute` 现在委托给 `core/option.flatten`
+
+#### Either 文档增强 - `src/functor/bifunctor.zig`
+
+添加 Either vs Result 的详细区别文档：
+
+| 特性 | Either(A, B) | Result(T, E) |
+|------|--------------|--------------|
+| 语义 | 两种可能的值 | 成功/失败 |
+| 偏向性 | 无偏向 | 右偏 (Ok) |
+| 用途 | Bifunctor/Profunctor | 错误处理 |
+
+### 📦 导出更新
+
+- `core/mod.zig` 新增 `flatten` 导出
+- `root.zig` 新增 `flatten` 导出
+
+### 📊 测试统计
+
+- 新增 3 个测试（flatten 测试）
+- 总测试数：964 tests
+- 所有测试通过，无内存泄漏
+
+### 🔧 技术改进
+
+- 消除 Option 操作的代码重复
+- 统一 API 设计风格
+- 提升代码可维护性
+
+---
+
 ## [v2.1.0] - 2026-01-02 - 类型类工具与实用函数 ✅
 
 ### 🎯 新增功能

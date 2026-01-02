@@ -16,21 +16,24 @@ const Option = option_mod.Option;
 
 /// Alternative 工具集合
 /// 简化实现，为特定类型提供Alternative操作
+///
+/// 注意：这些操作委托给 Option 类型的核心方法，
+/// 避免重复实现，保持 API 一致性。
 pub const alternative = struct {
     /// Option Alternative 工具
     pub const option = struct {
-        /// 空值构造
+        /// 空值构造 - 委托给 Option.None()
         pub fn empty(comptime A: type) Option(A) {
             return Option(A).None();
         }
 
-        /// 选择操作 (<|>)
+        /// 选择操作 (<|>) - 委托给 Option.or()
         pub fn orOp(comptime A: type, fa: Option(A), fb: Option(A)) Option(A) {
-            if (fa.isSome()) return fa;
-            return fb;
+            return fa.@"or"(fb);
         }
 
         /// 零或多个 - many（简化实现）
+        /// 返回包含 0 或 1 个元素的数组
         pub fn many(
             comptime A: type,
             allocator: std.mem.Allocator,
@@ -47,6 +50,7 @@ pub const alternative = struct {
         }
 
         /// 一或多个 - some（简化实现）
+        /// 要求至少有一个元素，否则返回错误
         pub fn some(
             comptime A: type,
             allocator: std.mem.Allocator,
@@ -64,6 +68,7 @@ pub const alternative = struct {
         }
 
         /// 可选的 - optional
+        /// 将 Option(A) 包装为 Option(Option(A))
         pub fn optional(comptime A: type, fa: Option(A)) Option(Option(A)) {
             return Option(Option(A)).Some(fa);
         }
@@ -72,15 +77,14 @@ pub const alternative = struct {
 
 // ============ 便捷函数 ============
 
-/// Option 的 empty
+/// Option 的 empty - 委托给 Option.None()
 pub fn emptyOption(comptime A: type) Option(A) {
-    return alternative.option.empty(A);
+    return Option(A).None();
 }
 
-/// Option 的 or 操作
+/// Option 的 or 操作 - 委托给 Option.or()
 pub fn orOption(comptime A: type, fa: Option(A), fb: Option(A)) Option(A) {
-    if (fa.isSome()) return fa;
-    return fb;
+    return fa.@"or"(fb);
 }
 
 /// Option 的 many 操作

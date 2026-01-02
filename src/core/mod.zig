@@ -17,6 +17,7 @@ pub const validation = @import("validation.zig");
 pub const Option = option.Option;
 pub const some = option.some;
 pub const none = option.none;
+pub const flatten = option.flatten;
 
 // ============ Result ============
 pub const Result = result.Result;

@@ -387,6 +387,18 @@ src/
 | root.zig 导出 | ✅ | 所有新类型类和函数 |
 | 测试验证 | ✅ | 961 tests 全部通过 |
 
+### v2.2.0 - API 整合与重构 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| Option.flatten | ✅ | 新增 flatten 函数展平嵌套 Option (3 tests) |
+| Alternative 整合 | ✅ | orOp 委托给 Option.or()，消除重复实现 |
+| Natural 整合 | ✅ | flattenOption 委托给 core flatten |
+| Distributive 整合 | ✅ | distribute 委托给 core flatten |
+| Either 文档 | ✅ | 添加 Either vs Result 区别说明 |
+| 导出更新 | ✅ | core/mod.zig 和 root.zig 导出 flatten |
+| 测试验证 | ✅ | 964 tests 全部通过 |
+
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 

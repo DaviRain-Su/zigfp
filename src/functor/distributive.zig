@@ -13,7 +13,8 @@
 //! - `G(F(A) + F(B)) → F(G(A) + G(B))` (右分配)
 
 const std = @import("std");
-const Option = @import("../core/option.zig").Option;
+const option_mod = @import("../core/option.zig");
+const Option = option_mod.Option;
 
 /// 标准Either类型用于分配律
 pub fn EitherOpt(comptime A: type, comptime B: type) type {
@@ -38,11 +39,10 @@ pub const distributive = struct {
     pub const option = struct {
         /// distribute: Option(Option(A)) → Option(A)
         /// 将嵌套的Option扁平化
+        ///
+        /// 注意：此函数委托给 core/option.zig 中的 flatten 函数
         pub fn distribute(comptime A: type, nested: Option(Option(A))) Option(A) {
-            return switch (nested) {
-                .some => |inner| inner,
-                .none => Option(A).None(),
-            };
+            return option_mod.flatten(A, nested);
         }
 
         /// codistribute: Either(Option(A), Option(B)) → Option(Either(A, B))

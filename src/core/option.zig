@@ -159,6 +159,15 @@ pub fn none(comptime T: type) Option(T) {
     return Option(T).None();
 }
 
+/// 展平嵌套的 Option
+/// Option(Option(T)) -> Option(T)
+pub fn flatten(comptime T: type, nested: Option(Option(T))) Option(T) {
+    return switch (nested) {
+        .some => |inner| inner,
+        .none => Option(T).None(),
+    };
+}
+
 // ============ 测试 ============
 
 test "Option.Some and Option.None" {
@@ -398,4 +407,30 @@ test "Monad associativity law" {
     const rhs = opt.flatMap(i32, fg);
 
     try std.testing.expectEqual(lhs.unwrap(), rhs.unwrap());
+}
+
+// ============ flatten 测试 ============
+
+test "flatten Some(Some(x)) = Some(x)" {
+    const inner = Option(i32).Some(42);
+    const nested = Option(Option(i32)).Some(inner);
+
+    const flattened = flatten(i32, nested);
+    try std.testing.expect(flattened.isSome());
+    try std.testing.expectEqual(@as(i32, 42), flattened.unwrap());
+}
+
+test "flatten Some(None) = None" {
+    const inner = Option(i32).None();
+    const nested = Option(Option(i32)).Some(inner);
+
+    const flattened = flatten(i32, nested);
+    try std.testing.expect(flattened.isNone());
+}
+
+test "flatten None = None" {
+    const nested = Option(Option(i32)).None();
+
+    const flattened = flatten(i32, nested);
+    try std.testing.expect(flattened.isNone());
 }

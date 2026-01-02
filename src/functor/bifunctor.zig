@@ -93,6 +93,29 @@ pub fn Pair(comptime A: type, comptime B: type) type {
 // ============ Either Bifunctor ============
 
 /// Either 类型 - 和类型的 Bifunctor
+///
+/// ## Either vs Result 的区别
+///
+/// | 特性 | Either(A, B) | Result(T, E) |
+/// |------|--------------|--------------|
+/// | 语义 | 两种可能的值 | 成功/失败 |
+/// | 偏向性 | 无偏向 | 右偏 (Ok) |
+/// | 用途 | Bifunctor/Profunctor 抽象 | 错误处理 |
+/// | Left/Err | 表示"另一种可能" | 表示"错误" |
+/// | Right/Ok | 表示"另一种可能" | 表示"成功值" |
+///
+/// ## 何时使用 Either
+///
+/// - 需要 Bifunctor 操作（bimap, mapLeft, mapRight）
+/// - 用于 Profunctor/Choice 抽象
+/// - 表示两种等价的可能性（无好坏之分）
+///
+/// ## 何时使用 Result
+///
+/// - 错误处理场景
+/// - 需要与 Zig 的 try/catch 配合
+/// - 明确区分成功和失败
+///
 pub fn Either(comptime A: type, comptime B: type) type {
     return union(enum) {
         left_val: A,
