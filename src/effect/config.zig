@@ -4,6 +4,7 @@
 //! 支持读取、设置、加载和保存配置。
 
 const std = @import("std");
+const builtin = @import("builtin");
 const effect = @import("effect.zig");
 
 // ============ 配置操作类型 ============
@@ -485,6 +486,8 @@ pub const ConfigHandler = struct {
 };
 
 /// 环境变量配置处理器
+/// Note: On Windows, environment variable access requires allocation due to WTF-16 encoding.
+/// Use EnvConfigHandlerAlloc for cross-platform support with allocator.
 pub const EnvConfigHandler = struct {
     const Self = @This();
 
@@ -492,13 +495,31 @@ pub const EnvConfigHandler = struct {
         return Self{};
     }
 
-    /// 获取环境变量
-    pub fn get(key: []const u8) ?[]const u8 {
+    /// 获取环境变量 (POSIX only, not available on Windows)
+    pub const get = if (builtin.os.tag == .windows) getWindows else getPosix;
+
+    fn getWindows(_: []const u8) ?[]const u8 {
+        return null;
+    }
+
+    fn getPosix(key: []const u8) ?[]const u8 {
         return std.posix.getenv(key);
     }
 
     /// 处理配置操作 (只读)
-    pub fn handle(_: Self, op: ConfigOp) ConfigResult {
+    /// On Windows, always returns not_found since posix.getenv is unavailable
+    pub const handle = if (builtin.os.tag == .windows) handleWindows else handlePosix;
+
+    fn handleWindows(_: Self, op: ConfigOp) ConfigResult {
+        return switch (op) {
+            .get => ConfigResult{ .not_found = {} },
+            .has => ConfigResult{ .bool_result = false },
+            .get_or_default => |data| ConfigResult{ .value = data.default },
+            else => ConfigResult{ .err = "operation not supported for env config" },
+        };
+    }
+
+    fn handlePosix(_: Self, op: ConfigOp) ConfigResult {
         return switch (op) {
             .get => |data| {
                 if (std.posix.getenv(data.key)) |value| {
@@ -520,6 +541,36 @@ pub const EnvConfigHandler = struct {
 
             else => ConfigResult{ .err = "operation not supported for env config" },
         };
+    }
+};
+
+/// Cross-platform environment variable handler with allocator support
+/// This handler works on all platforms including Windows
+pub const EnvConfigHandlerAlloc = struct {
+    allocator: std.mem.Allocator,
+
+    const Self = @This();
+
+    pub fn init(allocator: std.mem.Allocator) Self {
+        return Self{ .allocator = allocator };
+    }
+
+    /// 获取环境变量 (cross-platform, caller must free result)
+    pub fn get(self: Self, key: []const u8) ?[]const u8 {
+        const result = std.process.getEnvVarOwned(self.allocator, key) catch return null;
+        return result;
+    }
+
+    /// 释放由 get 返回的值
+    pub fn free(self: Self, value: []const u8) void {
+        self.allocator.free(value);
+    }
+
+    /// 检查环境变量是否存在
+    pub fn has(self: Self, key: []const u8) bool {
+        const result = std.process.getEnvVarOwned(self.allocator, key) catch return false;
+        self.allocator.free(result);
+        return true;
     }
 };
 

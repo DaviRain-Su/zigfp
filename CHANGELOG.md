@@ -1,5 +1,41 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.6.1] - 2026-01-02 - Windows 跨平台兼容性修复 ✅
+
+### 🐛 Bug 修复
+
+#### UDP 模块 Windows 兼容性 (`src/network/udp.zig`)
+- 修复 `posix.recvfrom` 在 Windows 上需要显式链接 libc 的问题
+- 使用编译时条件选择函数实现：
+  - Windows: `receiveFrom` 返回 `UdpError.ReceiveFailed`
+  - POSIX: 正常使用 `posix.recvfrom`
+- 添加 `receiveFromWindows` 和 `receiveFromPosix` 内部实现
+
+#### 环境变量处理 Windows 兼容性 (`src/effect/config.zig`)
+- 修复 `std.posix.getenv` 在 Windows 上不可用的问题
+  - Windows 环境变量使用 WTF-16 编码，需要使用 `std.process.getEnvVarOwned`
+- `EnvConfigHandler.get` 和 `EnvConfigHandler.handle` 使用编译时函数选择
+- 新增 `EnvConfigHandlerAlloc` 跨平台环境变量处理器：
+  - 支持所有平台（包括 Windows）
+  - 使用 `std.process.getEnvVarOwned` 获取环境变量
+  - 需要 allocator，调用者负责释放返回值
+
+### 📋 技术说明
+
+Windows 平台限制：
+- `std.posix.recvfrom` 需要显式链接 libc，在不链接 libc 的情况下无法使用
+- `std.posix.getenv` 在 Windows 上无法使用，因为环境变量是 WTF-16 编码
+
+解决方案采用编译时条件选择模式：
+```zig
+pub const receiveFrom = if (builtin.os.tag == .windows)
+    receiveFromWindows
+else
+    receiveFromPosix;
+```
+
+---
+
 ## [v1.6.0] - 2026-01-02 - 文档与示例完善 ✅
 
 ### 🎯 新增示例

@@ -1,4 +1,5 @@
 const std = @import("std");
+const builtin = @import("builtin");
 const Allocator = std.mem.Allocator;
 const net = std.net;
 const posix = std.posix;
@@ -189,7 +190,17 @@ pub const UdpSocket = struct {
     }
 
     /// 接收数据
-    pub fn receiveFrom(self: *Self, buffer: []u8) UdpError!ReceiveResult {
+    /// Note: On Windows, this function is not available (requires WSA functions)
+    pub const receiveFrom = if (builtin.os.tag == .windows)
+        receiveFromWindows
+    else
+        receiveFromPosix;
+
+    fn receiveFromWindows(_: *Self, _: []u8) UdpError!ReceiveResult {
+        return UdpError.ReceiveFailed;
+    }
+
+    fn receiveFromPosix(self: *Self, buffer: []u8) UdpError!ReceiveResult {
         const sock = self.socket orelse return UdpError.NotBound;
 
         var src_addr: posix.sockaddr = undefined;
