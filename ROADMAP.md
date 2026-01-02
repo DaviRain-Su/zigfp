@@ -160,7 +160,7 @@ src/
 | `async.zig` | 🚀 | 异步抽象 (未来实现) - Future/Promise/Async Monad |
 | `parallel.zig` | ✅ | 并发计算抽象 - 顺序实现，为并行预留接口 |
 | `effect.zig` | ✅ | 扩展Effect System - FileSystem效果完成 |
-| `network.zig` | 🚀 | 网络效果 (未来实现) - HTTP/TCP/UDP支持 |
+| `network.zig` | ✅ | 网络效果 - HTTP/TCP/UDP支持 (已在 v1.2.0 实现) |
 | `random.zig` | ✅ | 随机效果 - RandomInt/Float/Bytes/Shuffle |
 | `time.zig` | ✅ | 时间效果 - CurrentTime/Sleep/Duration/格式化 |
 | `config.zig` | ✅ | 配置效果 - Get/Set/Load/Save配置 |
@@ -203,6 +203,16 @@ src/
 | `udp.zig` | ✅ | UDP 客户端 - 无连接数据报传输 (8 tests) |
 | `network.zig` | ✅ | 网络效果系统 - 函数式网络操作抽象 (7 tests) |
 | `websocket.zig` | ✅ | WebSocket 客户端 - 双向通信支持 (15 tests) |
+
+### v1.3.0 - 弹性模式 ✅
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `retry.zig` | ✅ | 重试策略 - 指数退避、抖动、最大重试次数 (16 tests) |
+| `circuit_breaker.zig` | ✅ | 断路器 - 熔断保护、半开状态、故障计数 (15 tests) |
+| `bulkhead.zig` | ✅ | 隔板模式 - 资源隔离、并发限制 (14 tests) |
+| `timeout.zig` | ✅ | 超时控制 - 操作超时、截止时间 (14 tests) |
+| `fallback.zig` | ✅ | 降级策略 - 默认值、备用操作、缓存降级 (15 tests) |
 
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。

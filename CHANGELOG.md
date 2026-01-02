@@ -1,5 +1,64 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.3.0] - 2026-01-02 - 弹性模式 ✅
+
+### 🎯 新增功能
+
+#### 重试策略 (`retry.zig`)
+- `RetryPolicy` - 重试策略配置
+  - 固定间隔重试 (fixedDelay)
+  - 指数退避重试 (exponentialBackoff)
+  - 带抖动的指数退避 (exponentialBackoffWithJitter)
+  - 线性退避 (linearBackoff)
+  - 立即重试 (immediate)
+- `Retrier` - 重试执行器
+- `RetryStats` - 重试统计信息
+- `RetryPolicyBuilder` - 流畅 API 构建器
+
+#### 断路器 (`circuit_breaker.zig`)
+- `CircuitBreaker` - 断路器状态机
+  - 三种状态：Closed（正常）、Open（熔断）、HalfOpen（恢复测试）
+  - 故障计数和阈值配置
+  - 自动恢复机制（超时后进入半开状态）
+  - 状态变更回调
+- `CircuitStats` - 统计信息（成功率、失败率）
+- `CircuitBreakerBuilder` - 流畅 API 构建器
+
+#### 隔板模式 (`bulkhead.zig`)
+- `Bulkhead` - 并发隔离
+  - 最大并发数限制
+  - 等待队列支持
+  - 拒绝策略（快速失败/等待）
+- `Semaphore` - 信号量（简化并发控制）
+- `BulkheadStats` - 资源使用统计
+- `BulkheadBuilder` - 流畅 API 构建器
+
+#### 超时控制 (`timeout.zig`)
+- `Timeout` - 超时配置和执行
+  - 毫秒/秒级超时设置
+  - 执行时间统计
+- `Deadline` - 截止时间抽象
+  - 绝对时间计算
+  - 剩余时间查询
+- `TimeoutStats` - 统计信息
+- `TimeoutBuilder` - 流畅 API 构建器
+
+#### 降级策略 (`fallback.zig`)
+- `Fallback` - 降级执行器
+  - 默认值降级
+  - 备用操作降级
+- `CacheFallback` - 缓存降级（使用缓存值作为后备）
+- `FallbackChain` - 链式降级支持
+- 便捷函数：`withFallbackValue`、`withFallbackFn`、`tryOrNull`
+
+### 📊 统计数据
+- **总测试数**: 721个（从 647 增加，全部通过）
+- **新增模块**: 5个
+- **新增测试**: 74个
+- **无内存泄漏**
+
+---
+
 ## [v1.2.0] - 2026-01-02 - 网络效果 ✅
 
 ### 🎯 新增功能

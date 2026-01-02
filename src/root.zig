@@ -645,6 +645,69 @@ pub const WebSocketCloseCode = websocket.CloseCode;
 pub const webSocketClient = websocket.webSocketClient;
 pub const parseWebSocketUrl = websocket.parseUrl;
 
+// ============ v1.3.0 弹性模式 ============
+
+/// Retry - 重试策略
+pub const retry_mod = @import("retry.zig");
+pub const RetryPolicy = retry_mod.RetryPolicy;
+pub const ResilienceRetryConfig = retry_mod.RetryConfig;
+pub const RetryStrategy = retry_mod.RetryStrategy;
+pub const RetryStats = retry_mod.RetryStats;
+pub const ResilienceRetryResult = retry_mod.RetryResult;
+pub const Retrier = retry_mod.Retrier;
+pub const RetryPolicyBuilder = retry_mod.RetryPolicyBuilder;
+pub const RetryEffect = retry_mod.RetryEffect;
+pub const retryPolicy = retry_mod.retryPolicy;
+
+/// CircuitBreaker - 断路器
+pub const circuit_breaker = @import("circuit_breaker.zig");
+pub const CircuitBreaker = circuit_breaker.CircuitBreaker;
+pub const CircuitState = circuit_breaker.CircuitState;
+pub const CircuitBreakerConfig = circuit_breaker.CircuitBreakerConfig;
+pub const CircuitBreakerError = circuit_breaker.CircuitBreakerError;
+pub const CircuitStats = circuit_breaker.CircuitStats;
+pub const CircuitBreakerBuilder = circuit_breaker.CircuitBreakerBuilder;
+pub const CircuitBreakerEffect = circuit_breaker.CircuitBreakerEffect;
+pub const circuitBreakerBuilder = circuit_breaker.circuitBreaker;
+
+/// Bulkhead - 隔板模式
+pub const bulkhead_mod = @import("bulkhead.zig");
+pub const Bulkhead = bulkhead_mod.Bulkhead;
+pub const BulkheadConfig = bulkhead_mod.BulkheadConfig;
+pub const BulkheadError = bulkhead_mod.BulkheadError;
+pub const BulkheadStats = bulkhead_mod.BulkheadStats;
+pub const BulkheadBuilder = bulkhead_mod.BulkheadBuilder;
+pub const BulkheadEffect = bulkhead_mod.BulkheadEffect;
+pub const Semaphore = bulkhead_mod.Semaphore;
+pub const RejectionPolicy = bulkhead_mod.RejectionPolicy;
+pub const bulkheadBuilder = bulkhead_mod.bulkhead;
+
+/// Timeout - 超时控制
+pub const timeout_mod = @import("timeout.zig");
+pub const ResilienceTimeout = timeout_mod.Timeout;
+pub const TimeoutConfig = timeout_mod.TimeoutConfig;
+pub const TimeoutError = timeout_mod.TimeoutError;
+pub const TimeoutStats = timeout_mod.TimeoutStats;
+pub const TimeoutBuilder = timeout_mod.TimeoutBuilder;
+pub const TimeoutEffect = timeout_mod.TimeoutEffect;
+pub const Deadline = timeout_mod.Deadline;
+pub const timeoutBuilder = timeout_mod.timeout;
+pub const withTimeout = timeout_mod.withTimeout;
+
+/// Fallback - 降级策略
+pub const fallback = @import("fallback.zig");
+pub const FallbackStrategy = fallback.FallbackStrategy;
+pub const FallbackConfig = fallback.FallbackConfig;
+pub const FallbackStats = fallback.FallbackStats;
+pub const FallbackResult = fallback.FallbackResult;
+pub const FallbackMod = fallback.Fallback;
+pub const FallbackChain = fallback.FallbackChain;
+pub const CacheFallback = fallback.CacheFallback;
+pub const FallbackEffect = fallback.FallbackEffect;
+pub const withFallbackValue = fallback.withFallbackValue;
+pub const withFallbackFn = fallback.withFallbackFn;
+pub const tryOrNull = fallback.tryOrNull;
+
 // ============ 测试 ============
 
 test {
