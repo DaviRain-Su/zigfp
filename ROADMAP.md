@@ -33,7 +33,10 @@ src/
 ├── lens.zig         # Lens - 不可变更新
 ├── memoize.zig      # 记忆化
 ├── monoid.zig       # Monoid - 可组合代数结构
-└── io.zig           # IO - 函数式 IO 操作
+├── io.zig           # IO - 函数式 IO 操作
+├── iterator.zig     # Iterator - 函数式迭代器
+├── validation.zig   # Validation - 累积错误验证
+└── free.zig         # Free Monad + Trampoline
 ```
 
 ## 版本路线图
@@ -83,13 +86,21 @@ src/
 | 文档 | ✅ | 每个模块 API 文档 |
 | README | ✅ | 用户入口文档 |
 
-### v0.2.0 - 扩展（计划中）
+### v0.2.0 - 扩展 ✅
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `iterator.zig` | ⏳ | 增强迭代器 |
-| `validation.zig` | ⏳ | Validation - 累积错误 |
-| `free.zig` | ⏳ | Free Monad |
+| `iterator.zig` | ✅ | 增强迭代器 - map, filter, fold, take, skip, zip |
+| `validation.zig` | ✅ | Validation - 累积错误验证 |
+| `free.zig` | ✅ | Free Monad + Trampoline（栈安全递归） |
+
+### v0.3.0 - 未来计划
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `cont.zig` | ⏳ | Continuation Monad |
+| `effect.zig` | ⏳ | Effect System |
+| `parser.zig` | ⏳ | Parser Combinators |
 
 ## 特性对照表
 
@@ -107,6 +118,10 @@ src/
 | Memoize | `memoize` | - | - | `Memoized(K,V)` |
 | Monoid | `Monoid` | `Monoid` | - | `Monoid(T)` |
 | IO | `IO` | `IO` | - | `IO(T)` |
+| Iterator | `Iterator` | `Iterator` | `Iterator` | `SliceIterator(T)` |
+| Validation | `Validation` | `Validated` | - | `Validation(T,E)` |
+| Free | `Free` | `Free` | - | `Free(F,A)` |
+| Trampoline | `Trampoline` | `Trampoline` | - | `Trampoline(A)` |
 
 ## 性能特性
 

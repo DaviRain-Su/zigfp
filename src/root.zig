@@ -120,6 +120,48 @@ pub const putStr = io.putStr;
 pub const getLine = io.getLine;
 pub const getContents = io.getContents;
 
+// ============ v0.2.0 扩展模块 ============
+
+/// Iterator - 函数式迭代器
+pub const iterator = @import("iterator.zig");
+pub const SliceIterator = iterator.SliceIterator;
+pub const MapIterator = iterator.MapIterator;
+pub const FilterIterator = iterator.FilterIterator;
+pub const TakeIterator = iterator.TakeIterator;
+pub const SkipIterator = iterator.SkipIterator;
+pub const RangeIterator = iterator.RangeIterator;
+pub const RepeatIterator = iterator.RepeatIterator;
+pub const ZipIterator = iterator.ZipIterator;
+pub const EnumerateIterator = iterator.EnumerateIterator;
+pub const fromSlice = iterator.fromSlice;
+pub const range = iterator.range;
+pub const rangeStep = iterator.rangeStep;
+pub const repeat = iterator.repeat;
+
+/// Validation - 累积错误验证
+pub const validation = @import("validation.zig");
+pub const Validation = validation.Validation;
+pub const valid = validation.valid;
+pub const invalid = validation.invalid;
+pub const invalidMany = validation.invalidMany;
+pub const Validator = validation.Validator;
+pub const validator = validation.validator;
+pub const StringError = validation.StringError;
+pub const NumberError = validation.NumberError;
+pub const notEmpty = validation.notEmpty;
+pub const validateAll = validation.validateAll;
+
+/// Free Monad - 可解释的 DSL
+pub const free = @import("free.zig");
+pub const Free = free.Free;
+pub const Trampoline = free.Trampoline;
+pub const Program = free.Program;
+pub const ProgramOp = free.ProgramOp;
+pub const ConsoleF = free.ConsoleF;
+pub const ConsoleIO = free.ConsoleIO;
+pub const printLine = free.printLine;
+pub const readLine = free.readLine;
+
 // ============ 测试 ============
 
 test {

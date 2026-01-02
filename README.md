@@ -96,6 +96,15 @@ const sum = fp.sumMonoid.concat(&numbers);  // 15
 | `Monoid(T)` | 可组合代数结构 |
 | `IO(T)` | 函数式 IO 操作 |
 
+### 扩展模块 (v0.2.0)
+
+| 模块 | 说明 |
+|------|------|
+| `Iterator` | 函数式迭代器 - map, filter, fold |
+| `Validation(T, E)` | 累积错误验证 |
+| `Free(F, A)` | Free Monad - 可解释 DSL |
+| `Trampoline(A)` | 栈安全递归 |
+
 ## 示例
 
 ### Option 链式处理
@@ -204,6 +213,9 @@ zig build test
 - [Memoize](docs/memoize.md)
 - [Monoid](docs/monoid.md)
 - [IO](docs/io.md)
+- [Iterator](docs/iterator.md)
+- [Validation](docs/validation.md)
+- [Free Monad](docs/free.md)
 
 ## Zig 版本
 
