@@ -374,6 +374,19 @@ src/
 | root.zig 导出 | ✅ | 所有新类型和函数 |
 | 测试验证 | ✅ | 915 tests 全部通过 |
 
+### v2.1.0 - 类型类工具与实用函数 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| `eq.zig` | ✅ | Eq 类型类 - 等价性比较抽象 (12 tests) |
+| `ord.zig` | ✅ | Ord 类型类 - 排序比较抽象 (14 tests) |
+| `bounded.zig` | ✅ | Bounded 类型类 - 有界类型抽象 (10 tests) |
+| `utils.zig` | ✅ | 实用函数 - when、unless、guard、numeric、comparing 等 (10 tests) |
+| algebra/mod.zig 导出 | ✅ | Eq、Ord、Bounded 类型类和实例 |
+| function/mod.zig 导出 | ✅ | 实用函数导出 |
+| root.zig 导出 | ✅ | 所有新类型类和函数 |
+| 测试验证 | ✅ | 961 tests 全部通过 |
+
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 

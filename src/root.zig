@@ -106,6 +106,25 @@ pub const uncurry3Call = function.uncurry3Call;
 pub const Const = function.Const;
 pub const const_ = function.const_;
 
+// Utils
+pub const when = function.when;
+pub const whenLazy = function.whenLazy;
+pub const unless = function.unless;
+pub const guard = function.guard;
+pub const ifThenElse = function.ifThenElse;
+pub const ifThenElseLazy = function.ifThenElseLazy;
+pub const applyN = function.applyN;
+pub const until = function.until;
+pub const untilMax = function.untilMax;
+pub const while_ = function.while_;
+pub const on = function.on;
+pub const bool_ = function.bool_;
+pub const numeric = function.numeric;
+pub const comparing = function.comparing;
+pub const always = function.always;
+pub const constFirst = function.constFirst;
+pub const constSecond = function.constSecond;
+
 // Monad
 pub const Reader = monad.Reader;
 pub const Writer = monad.Writer;
@@ -151,6 +170,69 @@ pub const Endo = algebra.Endo;
 pub const endoMonoid = algebra.endoMonoid;
 pub const Dual = algebra.Dual;
 pub const DualMonoid = algebra.DualMonoid;
+
+// Eq
+pub const Eq = algebra.Eq;
+pub const defaultEq = algebra.defaultEq;
+pub const eqBy = algebra.eqBy;
+pub const allEq = algebra.allEq;
+pub const elem = algebra.elem;
+pub const notElem = algebra.notElem;
+pub const findIndex = algebra.findIndex;
+pub const count = algebra.count;
+pub const nub = algebra.nub;
+pub const nubBy = algebra.nubBy;
+pub const group = algebra.group;
+pub const eqI32 = algebra.eqI32;
+pub const eqI64 = algebra.eqI64;
+pub const eqU8 = algebra.eqU8;
+pub const eqU32 = algebra.eqU32;
+pub const eqU64 = algebra.eqU64;
+pub const eqUsize = algebra.eqUsize;
+pub const eqBool = algebra.eqBool;
+pub const eqString = algebra.eqString;
+
+// Ord
+pub const Ordering = algebra.Ordering;
+pub const Ord = algebra.Ord;
+pub const defaultOrd = algebra.defaultOrd;
+pub const ordBy = algebra.ordBy;
+pub const reverseOrd = algebra.reverseOrd;
+pub const minimum = algebra.minimum;
+pub const maximum = algebra.maximum;
+pub const minimumBy = algebra.minimumBy;
+pub const maximumBy = algebra.maximumBy;
+pub const isSorted = algebra.isSorted;
+pub const isSortedDesc = algebra.isSortedDesc;
+pub const sortWith = algebra.sortWith;
+pub const ordI32 = algebra.ordI32;
+pub const ordI64 = algebra.ordI64;
+pub const ordU8 = algebra.ordU8;
+pub const ordU32 = algebra.ordU32;
+pub const ordU64 = algebra.ordU64;
+pub const ordUsize = algebra.ordUsize;
+pub const ordF32 = algebra.ordF32;
+pub const ordF64 = algebra.ordF64;
+
+// Bounded
+pub const Bounded = algebra.Bounded;
+pub const makeBounded = algebra.makeBounded;
+pub const intBounded = algebra.intBounded;
+pub const enumerate = algebra.enumerate;
+pub const succ = algebra.succ;
+pub const pred = algebra.pred;
+pub const succWrap = algebra.succWrap;
+pub const predWrap = algebra.predWrap;
+pub const boundedU8 = algebra.boundedU8;
+pub const boundedU16 = algebra.boundedU16;
+pub const boundedU32 = algebra.boundedU32;
+pub const boundedU64 = algebra.boundedU64;
+pub const boundedI8 = algebra.boundedI8;
+pub const boundedI16 = algebra.boundedI16;
+pub const boundedI32 = algebra.boundedI32;
+pub const boundedI64 = algebra.boundedI64;
+pub const boundedBool = algebra.boundedBool;
+pub const boundedUnit = algebra.boundedUnit;
 
 // Data - Sequence
 pub const zipWith = data.zipWith;

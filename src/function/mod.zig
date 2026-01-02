@@ -5,12 +5,14 @@
 //! - identity, flip - 基础函数
 //! - Pipe - 管道操作
 //! - Memoize - 记忆化
+//! - Utils - 实用函数式编程工具
 
 const std = @import("std");
 
 pub const function = @import("function.zig");
 pub const pipe_mod = @import("pipe.zig");
 pub const memoize = @import("memoize.zig");
+pub const utils = @import("utils.zig");
 
 // ============ Function ============
 pub const compose = function.compose;
@@ -46,6 +48,25 @@ pub const Memoized = memoize.Memoized;
 pub const Memoized2 = memoize.Memoized2;
 pub const memoizeFn = memoize.memoize;
 pub const memoize2 = memoize.memoize2;
+
+// ============ Utils ============
+pub const when = utils.when;
+pub const whenLazy = utils.whenLazy;
+pub const unless = utils.unless;
+pub const guard = utils.guard;
+pub const ifThenElse = utils.ifThenElse;
+pub const ifThenElseLazy = utils.ifThenElseLazy;
+pub const applyN = utils.applyN;
+pub const until = utils.until;
+pub const untilMax = utils.untilMax;
+pub const while_ = utils.while_;
+pub const on = utils.on;
+pub const bool_ = utils.bool_;
+pub const numeric = utils.numeric;
+pub const comparing = utils.comparing;
+pub const always = utils.always;
+pub const constFirst = utils.constFirst;
+pub const constSecond = utils.constSecond;
 
 test {
     std.testing.refAllDecls(@This());

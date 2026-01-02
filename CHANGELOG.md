@@ -1,5 +1,121 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v2.1.0] - 2026-01-02 - 类型类工具与实用函数 ✅
+
+### 🎯 新增功能
+
+#### Eq - `src/algebra/eq.zig`
+
+等价性比较类型类，提供类型安全的相等性比较：
+
+- **类型定义**: `Eq(T)` - 等价性类型类接口
+- **构造函数**: `defaultEq`, `eqBy`
+- **比较操作**: `eq`, `neq`
+- **切片操作**: `allEq`, `elem`, `notElem`, `findIndex`, `count`
+- **去重操作**: `nub`, `nubBy`, `group`
+- **预定义实例**: `eqI32`, `eqI64`, `eqU8`, `eqU32`, `eqU64`, `eqUsize`, `eqBool`, `eqString`
+
+```zig
+// Eq 使用示例
+const intEq = defaultEq(i32);
+const areEqual = intEq.eq(1, 1);  // true
+
+// 去重
+const unique = try nub(i32, eqI32, allocator, &[_]i32{ 1, 2, 1, 3, 2 });
+// 结果: [1, 2, 3]
+
+// 分组相邻相等元素
+const groups = try group(i32, eqI32, allocator, &[_]i32{ 1, 1, 2, 2, 2, 1 });
+// 结果: [[1, 1], [2, 2, 2], [1]]
+```
+
+#### Ord - `src/algebra/ord.zig`
+
+排序比较类型类，提供全序比较操作：
+
+- **类型定义**: `Ordering` 枚举 (`lt`, `eq`, `gt`), `Ord(T)` 类型类
+- **构造函数**: `defaultOrd`, `ordBy`, `reverseOrd`
+- **比较操作**: `compare`, `lt`, `le`, `gt`, `ge`, `eq`
+- **边界操作**: `min`, `max`, `clamp`, `between`
+- **切片操作**: `minimum`, `maximum`, `minimumBy`, `maximumBy`
+- **排序**: `isSorted`, `isSortedDesc`, `sortWith`
+- **预定义实例**: `ordI32`, `ordI64`, `ordU8`, `ordU32`, `ordU64`, `ordUsize`, `ordF32`, `ordF64`
+
+```zig
+// Ord 使用示例
+const smaller = ordI32.min(5, 3);  // 3
+const clamped = ordI32.clamp(10, 0, 5);  // 5
+const inRange = ordI32.between(3, 1, 5);  // true
+
+// 查找最大/最小值
+const arr = [_]i32{ 3, 1, 4, 1, 5, 9 };
+const minVal = minimum(i32, ordI32, &arr);  // Some(1)
+const maxVal = maximum(i32, ordI32, &arr);  // Some(9)
+```
+
+#### Bounded - `src/algebra/bounded.zig`
+
+有界类型类，表示类型的最小和最大边界：
+
+- **类型定义**: `Bounded(T)` - 有界类型类接口
+- **构造函数**: `makeBounded`, `intBounded`
+- **边界访问**: `minBound`, `maxBound`
+- **范围操作**: `rangeSize`, `inBounds`, `clampToBounds`
+- **枚举操作**: `enumerate`, `succ`, `pred`, `succWrap`, `predWrap`
+- **预定义实例**: `boundedU8`, `boundedU16`, `boundedU32`, `boundedU64`, `boundedI8`, `boundedI16`, `boundedI32`, `boundedI64`, `boundedBool`, `boundedUnit`
+
+```zig
+// Bounded 使用示例
+const minVal = boundedU8.minBound;  // 0
+const maxVal = boundedU8.maxBound;  // 255
+
+// 后继/前驱（带边界检查）
+const next = succ(u8, boundedU8, 5);   // Some(6)
+const prev = pred(u8, boundedU8, 0);   // None (到达边界)
+
+// 循环后继/前驱
+const wrapped = succWrap(u8, boundedU8, 255);  // 0
+```
+
+#### Utils - `src/function/utils.zig`
+
+常用函数式编程工具函数：
+
+- **条件执行**: `when`, `whenLazy`, `unless`, `guard`
+- **条件表达式**: `ifThenElse`, `ifThenElseLazy`
+- **迭代操作**: `applyN`, `until`, `untilMax`, `while_`
+- **函数组合**: `on`, `always`, `constFirst`, `constSecond`
+- **布尔操作**: `bool_.and_`, `bool_.or_`, `bool_.not_`, `bool_.xor_`, `bool_.implies`, `bool_.iff`
+- **数值操作**: `numeric(T).add`, `sub`, `mul`, `div`, `mod`, `negate`, `abs`, `signum`, `succ`, `pred`, `isEven`, `isOdd`, `isZero`, `isPositive`, `isNegative`
+- **比较操作**: `comparing(T).eq`, `neq`, `lt`, `le`, `gt`, `ge`
+
+```zig
+// 条件执行
+const result = when(i32, x > 0, x * 2);  // Some(x*2) if x > 0, None otherwise
+const guarded = guard(isValid(input));    // Some(()) or None
+
+// 迭代
+const doubled = applyN(i32, double, 3, 1);  // 8 (1 -> 2 -> 4 -> 8)
+const found = until(i32, isGreaterThan10, increment, 0);  // 11
+
+// 布尔操作
+const implies = bool_.implies(false, true);  // true
+```
+
+### 📦 导出更新
+
+- `algebra/mod.zig` 新增导出：Eq, Ord, Bounded 及其所有相关函数和实例
+- `function/mod.zig` 新增导出：所有 utils 函数
+- `root.zig` 新增导出：所有新类型类和实用函数
+
+### 📊 测试统计
+
+- 新增 46 个测试（Eq 12 + Ord 14 + Bounded 10 + Utils 10）
+- 总测试数：961 tests
+- 所有测试通过，无内存泄漏
+
+---
+
 ## [v2.0.0] - 2026-01-02 - 高级类型与工具 ✅
 
 ### 🎯 新增功能

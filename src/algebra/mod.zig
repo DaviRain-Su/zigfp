@@ -7,6 +7,9 @@
 //! - Foldable - 可折叠结构
 //! - Traversable - 可遍历结构
 //! - Category - 范畴论基础
+//! - Eq - 相等性类型类
+//! - Ord - 排序类型类
+//! - Bounded - 有界类型类
 
 const std = @import("std");
 
@@ -16,6 +19,9 @@ pub const alternative = @import("alternative.zig");
 pub const foldable = @import("foldable.zig");
 pub const traversable = @import("traversable.zig");
 pub const category = @import("category.zig");
+pub const eq = @import("eq.zig");
+pub const ord = @import("ord.zig");
+pub const bounded = @import("bounded.zig");
 
 // ============ Semigroup ============
 pub const Semigroup = semigroup.Semigroup;
@@ -89,6 +95,69 @@ pub const function_category = category.function_category;
 pub const kleisli = category.kleisli;
 pub const covariant = category.covariant;
 pub const category_laws = category.laws;
+
+// ============ Eq ============
+pub const Eq = eq.Eq;
+pub const defaultEq = eq.defaultEq;
+pub const eqBy = eq.eqBy;
+pub const allEq = eq.allEq;
+pub const elem = eq.elem;
+pub const notElem = eq.notElem;
+pub const findIndex = eq.findIndex;
+pub const count = eq.count;
+pub const nub = eq.nub;
+pub const nubBy = eq.nubBy;
+pub const group = eq.group;
+pub const eqI32 = eq.eqI32;
+pub const eqI64 = eq.eqI64;
+pub const eqU8 = eq.eqU8;
+pub const eqU32 = eq.eqU32;
+pub const eqU64 = eq.eqU64;
+pub const eqUsize = eq.eqUsize;
+pub const eqBool = eq.eqBool;
+pub const eqString = eq.eqString;
+
+// ============ Ord ============
+pub const Ordering = ord.Ordering;
+pub const Ord = ord.Ord;
+pub const defaultOrd = ord.defaultOrd;
+pub const ordBy = ord.ordBy;
+pub const reverseOrd = ord.reverseOrd;
+pub const minimum = ord.minimum;
+pub const maximum = ord.maximum;
+pub const minimumBy = ord.minimumBy;
+pub const maximumBy = ord.maximumBy;
+pub const isSorted = ord.isSorted;
+pub const isSortedDesc = ord.isSortedDesc;
+pub const sortWith = ord.sortWith;
+pub const ordI32 = ord.ordI32;
+pub const ordI64 = ord.ordI64;
+pub const ordU8 = ord.ordU8;
+pub const ordU32 = ord.ordU32;
+pub const ordU64 = ord.ordU64;
+pub const ordUsize = ord.ordUsize;
+pub const ordF32 = ord.ordF32;
+pub const ordF64 = ord.ordF64;
+
+// ============ Bounded ============
+pub const Bounded = bounded.Bounded;
+pub const makeBounded = bounded.makeBounded;
+pub const intBounded = bounded.intBounded;
+pub const enumerate = bounded.enumerate;
+pub const succ = bounded.succ;
+pub const pred = bounded.pred;
+pub const succWrap = bounded.succWrap;
+pub const predWrap = bounded.predWrap;
+pub const boundedU8 = bounded.boundedU8;
+pub const boundedU16 = bounded.boundedU16;
+pub const boundedU32 = bounded.boundedU32;
+pub const boundedU64 = bounded.boundedU64;
+pub const boundedI8 = bounded.boundedI8;
+pub const boundedI16 = bounded.boundedI16;
+pub const boundedI32 = bounded.boundedI32;
+pub const boundedI64 = bounded.boundedI64;
+pub const boundedBool = bounded.boundedBool;
+pub const boundedUnit = bounded.boundedUnit;
 
 test {
     std.testing.refAllDecls(@This());
