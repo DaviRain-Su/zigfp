@@ -17,38 +17,109 @@
 - **惰性求值**: Lazy
 - **记忆化**: Memoize
 
-## 项目结构
+## 项目结构 (v1.4.0+ 模块化结构)
 
 ```
 src/
-├── root.zig         # 库入口
-├── option.zig       # Option/Maybe - 安全空值处理
-├── result.zig       # Result/Either - 错误处理
-├── lazy.zig         # 惰性求值
-├── function.zig     # compose, identity, flip
-├── pipe.zig         # 管道操作
-├── reader.zig       # Reader Monad - 依赖注入
-├── writer.zig       # Writer Monad - 日志累积
-├── state.zig        # State Monad - 状态管理
-├── lens.zig         # Lens - 不可变更新
-├── memoize.zig      # 记忆化
-├── monoid.zig       # Monoid - 可组合代数结构
-├── io.zig           # IO - 函数式 IO 操作
-├── iterator.zig     # Iterator - 函数式迭代器
-├── validation.zig   # Validation - 累积错误验证
-├── free.zig         # Free Monad + Trampoline
-├── cont.zig         # Continuation Monad - CPS 风格
-├── effect.zig       # Effect System - 代数效果
-├── parser.zig       # Parser Combinators - 组合式解析器
-├── applicative.zig  # Applicative Functor
-├── foldable.zig     # Foldable - 折叠操作
-├── traversable.zig  # Traversable - 效果遍历
-├── arrow.zig        # Arrow - 函数抽象
-├── comonad.zig      # Comonad - Monad 的对偶
-├── benchmark.zig    # 性能基准测试框架 (v0.8.0)
-├── mtl.zig          # Monad Transformers (v0.7.0)
-├── selective.zig    # Selective Applicative Functors (v0.7.0)
-└── file_system.zig  # FileSystem Effect (v0.8.0)
+├── root.zig              # 库主入口，统一导出所有模块
+├── prelude.zig           # Prelude - 常用函数和类型别名
+├── main.zig              # CLI 入口
+│
+├── core/                 # 核心数据类型
+│   ├── mod.zig          # 模块入口
+│   ├── option.zig       # Option - 安全空值处理
+│   ├── result.zig       # Result - 错误处理
+│   ├── lazy.zig         # Lazy - 惰性求值
+│   └── validation.zig   # Validation - 累积错误验证
+│
+├── monad/               # Monad 类型
+│   ├── mod.zig          # 模块入口
+│   ├── reader.zig       # Reader - 依赖注入
+│   ├── writer.zig       # Writer - 日志累积
+│   ├── state.zig        # State - 状态管理
+│   ├── cont.zig         # Continuation - CPS 风格
+│   ├── free.zig         # Free Monad + Trampoline
+│   ├── mtl.zig          # Monad Transformers
+│   └── selective.zig    # Selective Applicative
+│
+├── functor/             # Functor 抽象
+│   ├── mod.zig          # 模块入口
+│   ├── functor.zig      # Functor 基础
+│   ├── applicative.zig  # Applicative Functor
+│   ├── bifunctor.zig    # Bifunctor
+│   ├── profunctor.zig   # Profunctor
+│   └── distributive.zig # Distributive Laws
+│
+├── algebra/             # 代数结构
+│   ├── mod.zig          # 模块入口
+│   ├── semigroup.zig    # Semigroup
+│   ├── monoid.zig       # Monoid
+│   ├── alternative.zig  # Alternative
+│   ├── foldable.zig     # Foldable
+│   ├── traversable.zig  # Traversable
+│   └── category.zig     # Category Theory
+│
+├── data/                # 数据结构
+│   ├── mod.zig          # 模块入口
+│   ├── stream.zig       # Stream - 惰性流
+│   ├── zipper.zig       # Zipper - 可导航结构
+│   ├── iterator.zig     # Iterator
+│   ├── arrow.zig        # Arrow
+│   └── comonad.zig      # Comonad
+│
+├── function/            # 函数工具
+│   ├── mod.zig          # 模块入口
+│   ├── function.zig     # compose, identity, flip
+│   ├── pipe.zig         # Pipe 管道
+│   └── memoize.zig      # Memoize 记忆化
+│
+├── effect/              # 效果系统
+│   ├── mod.zig          # 模块入口
+│   ├── effect.zig       # Effect 基础
+│   ├── io.zig           # IO 效果
+│   ├── file_system.zig  # FileSystem 效果
+│   ├── random.zig       # Random 效果
+│   ├── time.zig         # Time 效果
+│   └── config.zig       # Config 效果
+│
+├── parser/              # 解析器
+│   ├── mod.zig          # 模块入口
+│   ├── parser.zig       # Parser Combinators
+│   ├── json.zig         # JSON 处理
+│   └── codec.zig        # 编解码器
+│
+├── network/             # 网络模块
+│   ├── mod.zig          # 模块入口
+│   ├── tcp.zig          # TCP 客户端
+│   ├── udp.zig          # UDP 客户端
+│   ├── websocket.zig    # WebSocket 客户端
+│   ├── http.zig         # HTTP 客户端
+│   ├── connection_pool.zig  # 连接池
+│   └── network.zig      # 网络效果
+│
+├── resilience/          # 弹性模式
+│   ├── mod.zig          # 模块入口
+│   ├── retry.zig        # 重试策略
+│   ├── circuit_breaker.zig  # 断路器
+│   ├── bulkhead.zig     # 隔板模式
+│   ├── timeout.zig      # 超时控制
+│   └── fallback.zig     # 降级策略
+│
+├── concurrent/          # 并发模块
+│   ├── mod.zig          # 模块入口
+│   ├── parallel.zig     # 并行计算
+│   └── benchmark.zig    # 性能基准
+│
+├── util/                # 工具模块
+│   ├── mod.zig          # 模块入口
+│   ├── auth.zig         # HTTP 认证
+│   ├── i18n.zig         # 国际化
+│   └── schema.zig       # JSON Schema
+│
+└── optics/              # 光学模块
+    ├── mod.zig          # 模块入口
+    ├── lens.zig         # Lens
+    └── optics.zig       # Iso, Prism, Affine
 ```
 
 ## 版本路线图
@@ -213,6 +284,17 @@ src/
 | `bulkhead.zig` | ✅ | 隔板模式 - 资源隔离、并发限制 (14 tests) |
 | `timeout.zig` | ✅ | 超时控制 - 操作超时、截止时间 (14 tests) |
 | `fallback.zig` | ✅ | 降级策略 - 默认值、备用操作、缓存降级 (15 tests) |
+
+### v1.4.0 - 项目重构 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| 模块化重构 | ✅ | 将 60+ 文件重组为 13 个子目录 |
+| mod.zig 入口 | ✅ | 每个子目录添加模块入口文件 |
+| 导入路径更新 | ✅ | 修复跨模块导入使用相对路径 |
+| root.zig 重写 | ✅ | 使用子模块导入替代平铺导入 |
+| prelude.zig 更新 | ✅ | 更新为新的模块化导入 |
+| 测试验证 | ✅ | 734 tests 全部通过 |
 
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。

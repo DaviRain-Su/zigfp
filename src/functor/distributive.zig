@@ -13,7 +13,7 @@
 //! - `G(F(A) + F(B)) → F(G(A) + G(B))` (右分配)
 
 const std = @import("std");
-const Option = @import("option.zig").Option;
+const Option = @import("../core/option.zig").Option;
 
 /// 标准Either类型用于分配律
 pub fn EitherOpt(comptime A: type, comptime B: type) type {

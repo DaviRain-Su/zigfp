@@ -12,8 +12,8 @@ const std = @import("std");
 const Allocator = std.mem.Allocator;
 
 // 使用统一的类型定义
-const Option = @import("option.zig").Option;
-const result_mod = @import("result.zig");
+const Option = @import("../core/option.zig").Option;
+const result_mod = @import("../core/result.zig");
 const Result = result_mod.Result;
 
 // ============ Slice Traversable ============

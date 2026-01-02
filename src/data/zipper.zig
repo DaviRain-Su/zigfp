@@ -10,7 +10,7 @@
 //! Zipper 是 Comonad，可以使用 extract、extend 等操作
 
 const std = @import("std");
-const option_mod = @import("option.zig");
+const option_mod = @import("../core/option.zig");
 const Option = option_mod.Option;
 
 /// 树方向枚举

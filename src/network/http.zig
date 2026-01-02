@@ -445,8 +445,8 @@ pub const RetryableHttpClient = struct {
 };
 
 /// 解析JSON响应为JsonValue
-pub fn parseJsonResponse(allocator: Allocator, response: HttpResponse) !@import("json.zig").JsonValue {
-    const json = @import("json.zig");
+pub fn parseJsonResponse(allocator: Allocator, response: HttpResponse) !@import("../parser/json.zig").JsonValue {
+    const json = @import("../parser/json.zig");
 
     if (!response.isSuccess()) {
         return HttpError.InvalidResponse;

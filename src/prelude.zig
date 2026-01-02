@@ -7,17 +7,30 @@
 
 const std = @import("std");
 
+// ============ 子模块导入 ============
+
+/// 核心类型
+pub const core = @import("core/mod.zig");
+pub const monad_mod = @import("monad/mod.zig");
+pub const functor_mod = @import("functor/mod.zig");
+pub const algebra_mod = @import("algebra/mod.zig");
+pub const data_mod = @import("data/mod.zig");
+pub const function_mod = @import("function/mod.zig");
+pub const effect_mod = @import("effect/mod.zig");
+pub const parser_mod = @import("parser/mod.zig");
+pub const optics_mod = @import("optics/mod.zig");
+
 // ============ 类型别名 ============
 
 /// 常用类型别名 - 更符合函数式编程习惯的命名
 /// Maybe - 可选值（同 Option）
-pub const Maybe = @import("option.zig").Option;
+pub const Maybe = core.Option;
 
 /// Either - 结果类型（同 Result）
-pub const Either = @import("result.zig").Result;
+pub const Either = core.Result;
 
 /// Id - 恒等类型构造器
-pub const Id = @import("functor.zig").Identity;
+pub const Id = functor_mod.functor.Identity;
 
 /// Unit - 单元类型（空结构体）
 pub const Unit = struct {
@@ -25,6 +38,40 @@ pub const Unit = struct {
         return .{};
     }
 };
+
+// ============ 重新导出常用模块 ============
+
+pub const option = core.option;
+pub const result = core.result;
+pub const lazy = core.lazy;
+pub const validation = core.validation;
+pub const function = function_mod.function;
+pub const pipe_mod = function_mod.pipe;
+pub const memoize = function_mod.memoize;
+pub const reader = monad_mod.reader;
+pub const writer = monad_mod.writer;
+pub const state = monad_mod.state;
+pub const cont = monad_mod.cont;
+pub const free = monad_mod.free;
+pub const lens = optics_mod.lens;
+pub const optics = optics_mod.optics;
+pub const monoid = algebra_mod.monoid;
+pub const semigroup = algebra_mod.semigroup;
+pub const foldable = algebra_mod.foldable;
+pub const traversable = algebra_mod.traversable;
+pub const alternative = algebra_mod.alternative;
+pub const functor = functor_mod.functor;
+pub const applicative = functor_mod.applicative;
+pub const bifunctor = functor_mod.bifunctor;
+pub const profunctor = functor_mod.profunctor;
+pub const io = effect_mod.io;
+pub const effect = effect_mod.effect;
+pub const parser = parser_mod.parser;
+pub const iterator = data_mod.iterator;
+pub const stream = data_mod.stream;
+pub const zipper = data_mod.zipper;
+pub const arrow = data_mod.arrow;
+pub const comonad = data_mod.comonad;
 
 // ============ 核心函数 ============
 
@@ -165,41 +212,6 @@ pub fn pure(comptime T: type, value: T) Id(T) {
 pub fn unit() Unit {
     return Unit.init();
 }
-
-// ============ 导入所有主要模块 ============
-
-/// 重新导出所有核心模块，方便使用
-pub const option = @import("option.zig");
-pub const result = @import("result.zig");
-pub const lazy = @import("lazy.zig");
-pub const function = @import("function.zig");
-pub const pipe_mod = @import("pipe.zig");
-pub const reader = @import("reader.zig");
-pub const writer = @import("writer.zig");
-pub const state = @import("state.zig");
-pub const lens = @import("lens.zig");
-pub const memoize = @import("memoize.zig");
-pub const monoid = @import("monoid.zig");
-pub const io = @import("io.zig");
-pub const iterator = @import("iterator.zig");
-pub const validation = @import("validation.zig");
-pub const free = @import("free.zig");
-pub const cont = @import("cont.zig");
-pub const effect = @import("effect.zig");
-pub const parser = @import("parser.zig");
-pub const applicative = @import("applicative.zig");
-pub const foldable = @import("foldable.zig");
-pub const traversable = @import("traversable.zig");
-pub const arrow = @import("arrow.zig");
-pub const comonad = @import("comonad.zig");
-pub const bifunctor = @import("bifunctor.zig");
-pub const profunctor = @import("profunctor.zig");
-pub const optics = @import("optics.zig");
-pub const stream = @import("stream.zig");
-pub const zipper = @import("zipper.zig");
-pub const semigroup = @import("semigroup.zig");
-pub const functor = @import("functor.zig");
-pub const alternative = @import("alternative.zig");
 
 // ============ 常用组合函数 ============
 

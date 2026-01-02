@@ -15,7 +15,7 @@
 //! 类似于 Haskell 的 Profunctor 类型类
 
 const std = @import("std");
-const option_mod = @import("option.zig");
+const option_mod = @import("../core/option.zig");
 const Option = option_mod.Option;
 
 // ============ Function Profunctor ============

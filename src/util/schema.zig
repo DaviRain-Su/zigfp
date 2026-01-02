@@ -1,6 +1,6 @@
 const std = @import("std");
 const Allocator = std.mem.Allocator;
-const json = @import("json.zig");
+const json = @import("../parser/json.zig");
 const JsonValue = json.JsonValue;
 
 /// JSON Schema 验证模块

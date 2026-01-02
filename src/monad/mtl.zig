@@ -16,8 +16,8 @@
 //! - run - 运行 Transformer 获得基础 Monad
 
 const std = @import("std");
-const Option = @import("option.zig").Option;
-const Result = @import("result.zig").Result;
+const Option = @import("../core/option.zig").Option;
+const Result = @import("../core/result.zig").Result;
 
 /// Identity Monad - simplest Monad for building other Monads
 pub fn Identity(comptime A: type) type {

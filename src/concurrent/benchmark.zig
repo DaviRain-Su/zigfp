@@ -214,16 +214,16 @@ pub fn performanceExample() !void {
 // ============ Performance Tests ============
 
 // 导入所需的模块
-const option_mod = @import("option.zig");
-const result_mod = @import("result.zig");
-const reader_mod = @import("reader.zig");
-const function_mod = @import("function.zig");
+const option_mod = @import("../core/option.zig");
+const result_mod = @import("../core/result.zig");
+const reader_mod = @import("../monad/reader.zig");
+const function_mod = @import("../function/function.zig");
 
 // 导入所需的模块
-const option = @import("option.zig");
-const result = @import("result.zig");
-const reader = @import("reader.zig");
-const function = @import("function.zig");
+const option = @import("../core/option.zig");
+const result = @import("../core/result.zig");
+const reader = @import("../monad/reader.zig");
+const function = @import("../function/function.zig");
 
 /// 核心类型性能测试
 pub const CoreTypeBenchmarks = struct {
@@ -372,7 +372,7 @@ pub const MonadBenchmarks = struct {
 
 /// Lazy 求值性能测试
 pub const LazyBenchmarks = struct {
-    const lazy_mod = @import("lazy.zig");
+    const lazy_mod = @import("../core/lazy.zig");
 
     /// Lazy 求值开销测量
     pub fn benchmarkLazyOverhead(allocator: std.mem.Allocator) !BenchmarkResult {
@@ -418,7 +418,7 @@ pub const LazyBenchmarks = struct {
 
 /// Pipe 性能测试
 pub const PipeBenchmarks = struct {
-    const pipe_mod = @import("pipe.zig");
+    const pipe_mod = @import("../function/pipe.zig");
 
     /// Pipe vs 手动链式调用
     pub fn benchmarkPipeVsManual(allocator: std.mem.Allocator) !BenchmarkResult {
@@ -477,7 +477,7 @@ pub const PipeBenchmarks = struct {
 
 /// State Monad 性能测试
 pub const StateBenchmarks = struct {
-    const state_mod = @import("state.zig");
+    const state_mod = @import("../monad/state.zig");
 
     /// State Monad vs 可变状态
     pub fn benchmarkStateVsMutable(allocator: std.mem.Allocator) !BenchmarkResult {
@@ -524,9 +524,9 @@ pub const StateBenchmarks = struct {
 
 /// 高级抽象性能测试
 pub const AdvancedBenchmarks = struct {
-    const lens_mod = @import("lens.zig");
-    const traversable_mod = @import("traversable.zig");
-    const parser_mod = @import("parser.zig");
+    const lens_mod = @import("../optics/lens.zig");
+    const traversable_mod = @import("../algebra/traversable.zig");
+    const parser_mod = @import("../parser/parser.zig");
 
     const Point = struct {
         x: i32,
@@ -671,8 +671,8 @@ pub const AdvancedBenchmarks = struct {
 
 /// Writer Monad 性能测试
 pub const WriterBenchmarks = struct {
-    const writer_mod = @import("writer.zig");
-    const monoid_mod = @import("monoid.zig");
+    const writer_mod = @import("../monad/writer.zig");
+    const monoid_mod = @import("../algebra/monoid.zig");
 
     /// Writer Monad 日志开销
     pub fn benchmarkWriterVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {
@@ -720,7 +720,7 @@ pub const WriterBenchmarks = struct {
 
 /// Partial Application 性能测试
 pub const PartialBenchmarks = struct {
-    const function_mod_bench = @import("function.zig");
+    const function_mod_bench = @import("../function/function.zig");
 
     /// Partial Application 开销
     pub fn benchmarkPartialVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {

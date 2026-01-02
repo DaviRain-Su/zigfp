@@ -23,7 +23,7 @@
 //! ```
 
 const std = @import("std");
-const option_mod = @import("option.zig");
+const option_mod = @import("../core/option.zig");
 const Option = option_mod.Option;
 
 // ============ Iso (同构) ============

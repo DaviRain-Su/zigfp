@@ -4,7 +4,7 @@
 //! 常用于日志记录、审计追踪等场景。
 
 const std = @import("std");
-const monoid = @import("monoid.zig");
+const monoid = @import("../algebra/monoid.zig");
 
 /// Writer Monad - 日志累积
 pub fn Writer(comptime W: type, comptime T: type) type {

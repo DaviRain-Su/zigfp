@@ -13,7 +13,7 @@
 //! - Functor ⊂ Applicative ⊂ Selective ⊂ Monad
 
 const std = @import("std");
-const Option = @import("option.zig").Option;
+const Option = @import("../core/option.zig").Option;
 
 /// Either 类型用于选择操作
 pub fn Either(comptime A: type, comptime B: type) type {

@@ -36,7 +36,7 @@ pub const function_category = struct {
 pub const kleisli = struct {
     /// Option Monad的Kleisli范畴
     pub const option = struct {
-        const Option = @import("option.zig").Option;
+        const Option = @import("../core/option.zig").Option;
 
         /// 恒等Kleisli箭头
         pub fn id(comptime A: type) *const fn (A) Option(A) {
@@ -77,7 +77,7 @@ pub const covariant = struct {
     /// Option函子
     pub const option = struct {
         /// 映射操作示例
-        pub fn map(comptime A: type, comptime B: type, opt_a: @import("option.zig").Option(A), f: *const fn (A) B) @import("option.zig").Option(B) {
+        pub fn map(comptime A: type, comptime B: type, opt_a: @import("../core/option.zig").Option(A), f: *const fn (A) B) @import("../core/option.zig").Option(B) {
             return opt_a.map(B, f);
         }
     };
@@ -152,17 +152,17 @@ test "函数范畴 - 简单组合" {
 
 test "Kleisli范畴 - Option" {
     const safe_div = struct {
-        fn f(x: i32) @import("option.zig").Option(i32) {
+        fn f(x: i32) @import("../core/option.zig").Option(i32) {
             if (x == 0) {
-                return @import("option.zig").Option(i32).None();
+                return @import("../core/option.zig").Option(i32).None();
             }
-            return @import("option.zig").Option(i32).Some(@divTrunc(10, x));
+            return @import("../core/option.zig").Option(i32).Some(@divTrunc(10, x));
         }
     }.f;
 
     const double_opt = struct {
-        fn f(x: i32) @import("option.zig").Option(i32) {
-            return @import("option.zig").Option(i32).Some(x * 2);
+        fn f(x: i32) @import("../core/option.zig").Option(i32) {
+            return @import("../core/option.zig").Option(i32).Some(x * 2);
         }
     }.f;
 
@@ -196,9 +196,9 @@ test "范畴法则 - 结合律" {
 }
 
 test "协变函子 - Option" {
-    const Option = @import("option.zig").Option;
+    const OptionType = @import("../core/option.zig").Option;
 
-    const some_val = Option(i32).Some(5);
+    const some_val = OptionType(i32).Some(5);
     const double = struct {
         fn f(x: i32) i32 {
             return x * 2;
