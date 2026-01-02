@@ -107,9 +107,27 @@ pub const Cont = monad.Cont;
 pub const Free = monad.Free;
 pub const ask = monad.ask;
 pub const asks = monad.asks;
+pub const LocalReader = monad.LocalReader;
+pub const local = monad.local;
+pub const ReaderWithEnv = monad.ReaderWithEnv;
+pub const withReader = monad.withReader;
 pub const tell = monad.tell;
 pub const get = monad.get;
 pub const modify = monad.modify;
+pub const gets = monad.gets;
+pub const putValue = monad.putValue;
+pub const modifyGet = monad.modifyGet;
+pub const StateWithValue = monad.StateWithValue;
+pub const ModifyGetState = monad.ModifyGetState;
+
+// Do-Notation
+pub const DoOption = monad.DoOption;
+pub const DoResult = monad.DoResult;
+pub const DoList = monad.DoList;
+pub const doOption = monad.doOption;
+pub const doResult = monad.doResult;
+pub const pureOption = monad.pureOption;
+pub const pureResult = monad.pureResult;
 
 // Algebra
 pub const Monoid = algebra.Monoid;
@@ -126,6 +144,26 @@ pub const Endo = algebra.Endo;
 pub const endoMonoid = algebra.endoMonoid;
 pub const Dual = algebra.Dual;
 pub const DualMonoid = algebra.DualMonoid;
+
+// Data - Sequence
+pub const zipWith = data.zipWith;
+pub const ZipWithIterator = data.ZipWithIterator;
+pub const zipWithIter = data.zipWithIter;
+pub const zip3 = data.zip3;
+pub const zipWith3 = data.zipWith3;
+pub const unzip = data.unzip;
+pub const unzip3 = data.unzip3;
+pub const intersperse = data.intersperse;
+pub const intercalate = data.intercalate;
+pub const chunksOf = data.chunksOf;
+pub const sliding = data.sliding;
+pub const transpose = data.transpose;
+pub const replicate = data.replicate;
+pub const seqRange = data.seqRange;
+pub const reverse = data.reverse;
+pub const takeLast = data.takeLast;
+pub const dropLast = data.dropLast;
+pub const SequenceError = data.SequenceError;
 
 // Optics
 pub const Lens = optics.Lens;

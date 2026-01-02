@@ -18,12 +18,17 @@ pub const cont = @import("cont.zig");
 pub const free = @import("free.zig");
 pub const mtl = @import("mtl.zig");
 pub const selective = @import("selective.zig");
+pub const do_notation = @import("do_notation.zig");
 
 // ============ Reader ============
 pub const Reader = reader.Reader;
 pub const ReaderValue = reader.ReaderValue;
 pub const ask = reader.ask;
 pub const asks = reader.asks;
+pub const LocalReader = reader.LocalReader;
+pub const local = reader.local;
+pub const ReaderWithEnv = reader.ReaderWithEnv;
+pub const withReader = reader.withReader;
 
 // ============ Writer ============
 pub const Writer = writer.Writer;
@@ -32,8 +37,13 @@ pub const tell = writer.tell;
 // ============ State ============
 pub const State = state.State;
 pub const StateValue = state.StateValue;
+pub const StateWithValue = state.StateWithValue;
+pub const ModifyGetState = state.ModifyGetState;
 pub const get = state.get;
 pub const modify = state.modify;
+pub const gets = state.gets;
+pub const putValue = state.putValue;
+pub const modifyGet = state.modifyGet;
 pub const StatefulOps = state.StatefulOps;
 
 // ============ Cont ============
@@ -64,6 +74,15 @@ pub const ifSOption = selective.ifSOption;
 pub const whenSOption = selective.whenSOption;
 pub const selectMOption = selective.selectMOption;
 pub const selectiveCombinators = selective.combinators;
+
+// ============ Do-Notation ============
+pub const DoOption = do_notation.DoOption;
+pub const DoResult = do_notation.DoResult;
+pub const DoList = do_notation.DoList;
+pub const doOption = do_notation.doOption;
+pub const doResult = do_notation.doResult;
+pub const pureOption = do_notation.pureOption;
+pub const pureResult = do_notation.pureResult;
 
 test {
     std.testing.refAllDecls(@This());

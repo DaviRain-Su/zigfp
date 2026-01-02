@@ -71,6 +71,22 @@ pub fn Writer(comptime W: type, comptime T: type) type {
                 self.log,
             );
         }
+
+        /// listens - 监听并转换日志
+        /// listens f m = do { (a, w) <- listen m; pure (a, f w) }
+        pub fn listens(self: Self, comptime U: type, f: *const fn (W) U) Writer(W, struct { T, U }) {
+            return Writer(W, struct { T, U }).init(
+                .{ self.value, f(self.log) },
+                self.log,
+            );
+        }
+
+        /// pass - 传递日志修改函数
+        /// pass m = do { ((a, f), w) <- listen m; pure (a, f w) }
+        /// 用于 Writer(W, struct { T, fn(W) W })
+        pub fn passWithModifier(self: Self, logModifier: *const fn (W) W) Self {
+            return Self.init(self.value, logModifier(self.log));
+        }
     };
 }
 
@@ -170,6 +186,34 @@ test "Writer chain with Monoid" {
 
     try std.testing.expectEqual(@as(i32, 1), writer.value);
     try std.testing.expectEqual(@as(i32, 60), writer.log);
+}
+
+test "Writer.listens" {
+    const writer = Writer(i32, []const u8).init("hello", 100);
+
+    // listens 对日志应用函数，产生新的值类型
+    const listened = writer.listens(i32, struct {
+        fn f(log: i32) i32 {
+            return log * 2;
+        }
+    }.f);
+
+    try std.testing.expectEqualStrings("hello", listened.value[0]);
+    try std.testing.expectEqual(@as(i32, 200), listened.value[1]);
+    try std.testing.expectEqual(@as(i32, 100), listened.log); // 原日志不变
+}
+
+test "Writer.passWithModifier" {
+    const writer = Writer(i32, []const u8).init("hello", 100);
+
+    const doubled = writer.passWithModifier(struct {
+        fn f(log: i32) i32 {
+            return log * 2;
+        }
+    }.f);
+
+    try std.testing.expectEqualStrings("hello", doubled.value);
+    try std.testing.expectEqual(@as(i32, 200), doubled.log);
 }
 
 test "Writer map chain" {

@@ -339,6 +339,17 @@ src/
 | 更多 Monoid | ✅ | First、Last、Endo、Dual、浮点数 Monoid |
 | 测试验证 | ✅ | 789 tests 全部通过 |
 
+### v1.8.0 - 序列工具与 Do Notation ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| `sequence.zig` | ✅ | 序列工具 - zipWith、zip3、unzip、intersperse、chunksOf、sliding、transpose |
+| `do_notation.zig` | ✅ | Do-notation 构建器 - DoOption、DoResult、DoList |
+| Reader 增强 | ✅ | local、withReader 函数 |
+| Writer 增强 | ✅ | listens、passWithModifier 函数 |
+| State 增强 | ✅ | gets、putValue、modifyGet 函数 |
+| 测试验证 | ✅ | 836 tests 全部通过 |
+
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 

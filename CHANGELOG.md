@@ -1,5 +1,122 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.8.0] - 2026-01-02 - 序列工具与 Do-Notation ✅
+
+### 🎯 新增功能
+
+#### 序列工具 - `src/data/sequence.zig`
+
+提供函数式风格的序列操作：
+
+- **`zipWith`** - 使用函数合并两个序列
+- **`ZipWithIterator`/`zipWithIter`** - 惰性 zipWith 迭代器
+- **`zip3`** - 合并三个序列为三元组
+- **`zipWith3`** - 使用函数合并三个序列
+- **`unzip`/`unzip3`** - 分解 Pair/Triple 序列
+- **`intersperse`** - 在元素间插入分隔符
+- **`intercalate`** - 使用分隔序列连接多个序列
+- **`chunksOf`** - 将序列分成固定大小的块
+- **`sliding`** - 滑动窗口视图
+- **`transpose`** - 转置二维序列
+- **`replicate`** - 重复元素 n 次
+- **`range`** - 生成整数范围
+- **`reverse`** - 反转序列
+- **`takeLast`/`dropLast`** - 获取/删除最后 n 个元素
+
+```zig
+// zipWith
+const result = try zipWith(i32, i32, i32, allocator, &as, &bs, add);
+// intersperse
+const result = try intersperse(i32, allocator, &[_]i32{1, 2, 3}, 0);
+// chunksOf
+const chunks = try chunksOf(i32, allocator, &xs, 2);
+```
+
+#### Do-Notation 构建器 - `src/monad/do_notation.zig`
+
+模拟 Haskell 的 do-notation，提供流畅的 monadic 组合：
+
+- **`DoOption(T)`** - Option Monad 的 Do 构建器
+  - `start`/`pure` - 开始 Do 块
+  - `andThen` - bind (>>=)
+  - `map` - 映射值
+  - `then` - 执行但忽略前一个值
+  - `guard`/`filter` - 条件检查
+  - `unwrapOr` - 获取值或默认值
+
+- **`DoResult(T, E)`** - Result Monad 的 Do 构建器
+  - `start`/`pure`/`fail` - 开始 Do 块
+  - `andThen` - bind (>>=)
+  - `map`/`mapErr` - 映射值/错误
+  - `guard`/`ensure` - 条件检查
+  - `unwrapOr` - 获取值或默认值
+
+- **`DoList(T)`** - 列表推导风格的 Do 构建器
+  - `from`/`range` - 从切片或范围开始
+  - `flatMap`/`map`/`filter` - 列表操作
+
+```zig
+// Do-notation 风格
+const result = DoOption(i32)
+    .pure(10)
+    .andThen(i32, validate)
+    .map(i32, double)
+    .guard(isPositive)
+    .run();
+```
+
+#### Reader Monad 增强 - `src/monad/reader.zig`
+
+- **`LocalReader`** - 在修改后的环境中运行 Reader
+- **`local`** - 创建 LocalReader
+- **`ReaderWithEnv`** - 带环境变换的 Reader
+- **`withReader`** - 使用环境提取器包装 Reader
+
+```zig
+// local - 在修改后的环境中运行
+const localReader = local(i32, i32, getEnv, doubleEnv);
+// withReader - 从外部环境提取内部环境
+const appReader = withReader(AppConfig, DbConfig, T, dbReader, extractDb);
+```
+
+#### Writer Monad 增强 - `src/monad/writer.zig`
+
+- **`listens`** - 监听并转换日志
+- **`passWithModifier`** - 传递日志修改函数
+
+#### State Monad 增强 - `src/monad/state.zig`
+
+- **`gets`** - 使用函数获取状态的一部分
+- **`putValue`** - 设置状态为给定值
+- **`modifyGet`** - 修改状态并返回旧值
+- **`StateWithValue`** - 设置状态并返回值的辅助类型
+- **`ModifyGetState`** - modifyGet 的辅助类型
+
+```zig
+// gets - 获取状态的一部分
+const getter = gets(Counter, i32, getCount);
+// modifyGet - 修改并返回旧值
+const modifier = modifyGet(i32, doubleState);
+```
+
+### 📦 导出更新
+
+- `root.zig` 新增导出：
+  - Do-Notation: DoOption, DoResult, DoList, doOption, doResult, pureOption, pureResult
+  - Reader: LocalReader, local, ReaderWithEnv, withReader
+  - State: gets, putValue, modifyGet, StateWithValue, ModifyGetState
+  - Sequence: zipWith, zip3, unzip, intersperse, intercalate, chunksOf, sliding, transpose, etc.
+- `monad/mod.zig` 导出所有 Do-Notation 和 Monad 增强
+- `data/mod.zig` 导出所有序列工具函数
+
+### 📊 测试统计
+
+- 新增 47 个测试
+- 总测试数：836 tests
+- 所有测试通过，无内存泄漏
+
+---
+
 ## [v1.7.0] - 2026-01-02 - 函数增强与 Curry ✅
 
 ### 🎯 新增功能

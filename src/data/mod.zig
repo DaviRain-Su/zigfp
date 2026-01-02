@@ -14,6 +14,7 @@ pub const zipper = @import("zipper.zig");
 pub const iterator = @import("iterator.zig");
 pub const arrow = @import("arrow.zig");
 pub const comonad = @import("comonad.zig");
+pub const sequence = @import("sequence.zig");
 
 // ============ Stream ============
 pub const StreamType = stream.Stream;
@@ -76,6 +77,26 @@ pub const NonEmpty = comonad.NonEmpty;
 pub const Store = comonad.Store;
 pub const Env = comonad.Env;
 pub const Traced = comonad.Traced;
+
+// ============ Sequence ============
+pub const zipWith = sequence.zipWith;
+pub const ZipWithIterator = sequence.ZipWithIterator;
+pub const zipWithIter = sequence.zipWithIter;
+pub const zip3 = sequence.zip3;
+pub const zipWith3 = sequence.zipWith3;
+pub const unzip = sequence.unzip;
+pub const unzip3 = sequence.unzip3;
+pub const intersperse = sequence.intersperse;
+pub const intercalate = sequence.intercalate;
+pub const chunksOf = sequence.chunksOf;
+pub const sliding = sequence.sliding;
+pub const transpose = sequence.transpose;
+pub const replicate = sequence.replicate;
+pub const seqRange = sequence.range;
+pub const reverse = sequence.reverse;
+pub const takeLast = sequence.takeLast;
+pub const dropLast = sequence.dropLast;
+pub const SequenceError = sequence.SequenceError;
 
 test {
     std.testing.refAllDecls(@This());

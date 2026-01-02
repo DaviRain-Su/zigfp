@@ -72,6 +72,104 @@ pub fn modify(comptime S: type, comptime f: *const fn (S) S) State(S, void) {
     }.run);
 }
 
+/// gets - 使用函数获取状态的一部分
+/// gets f = do { s <- get; pure (f s) }
+pub fn gets(comptime S: type, comptime T: type, comptime f: *const fn (S) T) State(S, T) {
+    return State(S, T).init(struct {
+        fn run(s: S) struct { T, S } {
+            return .{ f(s), s };
+        }
+    }.run);
+}
+
+/// put - 设置新状态，返回 void
+pub fn put(comptime S: type) PutState(S) {
+    return PutState(S){};
+}
+
+/// PutState - 设置状态的辅助类型
+pub fn PutState(comptime S: type) type {
+    return struct {
+        const Self = @This();
+
+        /// 设置状态
+        pub fn set(newState: S) State(S, void) {
+            _ = newState;
+            // 由于 Zig 不支持闭包，需要编译时确定新状态
+            @compileError("PutState.set requires closure support. Use StateWithValue instead.");
+        }
+    };
+}
+
+/// StateWithValue - 带预设值的状态操作
+pub fn StateWithValue(comptime S: type, comptime T: type) type {
+    return struct {
+        value: T,
+        newState: S,
+
+        const Self = @This();
+
+        /// 创建设置状态并返回值的操作
+        pub fn init(value: T, newState: S) Self {
+            return .{ .value = value, .newState = newState };
+        }
+
+        /// 运行状态操作
+        pub fn runState(self: Self, _: S) struct { T, S } {
+            return .{ self.value, self.newState };
+        }
+
+        /// 只返回值
+        pub fn evalState(self: Self, _: S) T {
+            return self.value;
+        }
+
+        /// 只返回新状态
+        pub fn execState(self: Self, _: S) S {
+            return self.newState;
+        }
+    };
+}
+
+/// putValue - 设置状态为给定值
+pub fn putValue(comptime S: type, newState: S) StateWithValue(S, void) {
+    return StateWithValue(S, void).init({}, newState);
+}
+
+/// modifyGet - 修改状态并返回旧值
+pub fn ModifyGetState(comptime S: type) type {
+    return struct {
+        modifier: *const fn (S) S,
+
+        const Self = @This();
+
+        pub fn init(modifier: *const fn (S) S) Self {
+            return .{ .modifier = modifier };
+        }
+
+        /// 运行：修改状态，返回旧值
+        pub fn runState(self: Self, s: S) struct { S, S } {
+            return .{ s, self.modifier(s) };
+        }
+
+        /// 只返回旧值
+        pub fn evalState(self: Self, s: S) S {
+            _ = self;
+            return s;
+        }
+
+        /// 只返回新状态
+        pub fn execState(self: Self, s: S) S {
+            return self.modifier(s);
+        }
+    };
+}
+
+/// modifyGet - 修改状态并返回旧值
+pub fn modifyGet(comptime S: type, modifier: *const fn (S) S) ModifyGetState(S) {
+    return ModifyGetState(S).init(modifier);
+}
+
 /// 带值的 State - 解决闭包问题
 pub fn StateValue(comptime S: type, comptime T: type) type {
     return struct {
@@ -222,4 +320,55 @@ test "state with struct" {
     try std.testing.expectEqual(@as(i32, 0), result[0]);
     try std.testing.expectEqual(@as(i32, 1), result[1].count);
     try std.testing.expectEqualStrings("test", result[1].name);
+}
+
+test "gets" {
+    const Counter = struct {
+        count: i32,
+        name: []const u8,
+    };
+
+    const getCount = struct {
+        fn f(c: Counter) i32 {
+            return c.count;
+        }
+    }.f;
+
+    const getter = gets(Counter, i32, getCount);
+
+    const initial = Counter{ .count = 42, .name = "test" };
+    const result = getter.runState(initial);
+
+    try std.testing.expectEqual(@as(i32, 42), result[0]);
+    try std.testing.expectEqual(@as(i32, 42), result[1].count); // 状态不变
+}
+
+test "putValue" {
+    const putter = putValue(i32, 100);
+
+    const result = putter.runState(0);
+    try std.testing.expectEqual(@as(i32, 100), result[1]); // 新状态
+}
+
+test "modifyGet" {
+    const doubleState = struct {
+        fn f(s: i32) i32 {
+            return s * 2;
+        }
+    }.f;
+
+    const modifier = modifyGet(i32, doubleState);
+
+    const result = modifier.runState(21);
+    try std.testing.expectEqual(@as(i32, 21), result[0]); // 旧值
+    try std.testing.expectEqual(@as(i32, 42), result[1]); // 新状态
+}
+
+test "StateWithValue" {
+    // 设置状态并返回一个值
+    const sv = StateWithValue(i32, []const u8).init("result", 100);
+
+    const result = sv.runState(0);
+    try std.testing.expectEqualStrings("result", result[0]);
+    try std.testing.expectEqual(@as(i32, 100), result[1]);
 }
