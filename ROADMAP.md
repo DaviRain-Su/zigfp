@@ -349,21 +349,25 @@ src/
 
 ## 相关文档
 
-### 类型文档
-- [Option 类型](docs/option.md)
-- [Result 类型](docs/result.md)
-- [Lazy 类型](docs/lazy.md)
+### 模块文档
 
-### 函数工具文档
-- [函数组合](docs/function.md)
-- [管道操作](docs/pipe.md)
+| 模块 | 说明 |
+|------|------|
+| [core/](docs/core/README.md) | 核心类型 - Option, Result, Lazy, Validation |
+| [monad/](docs/monad/README.md) | Monad 类型 - Reader, Writer, State, Cont, Free |
+| [functor/](docs/functor/README.md) | Functor 抽象 - Functor, Applicative, Bifunctor |
+| [algebra/](docs/algebra/README.md) | 代数结构 - Semigroup, Monoid, Foldable, Traversable |
+| [data/](docs/data/README.md) | 数据结构 - Stream, Zipper, Iterator, Comonad |
+| [function/](docs/function/README.md) | 函数工具 - compose, Pipe, Memoize |
+| [effect/](docs/effect/README.md) | 效果系统 - Effect, IO, FileSystem, Random, Time |
+| [parser/](docs/parser/README.md) | 解析器 - Parser Combinators, JSON, Codec |
+| [network/](docs/network/README.md) | 网络操作 - TCP, UDP, WebSocket, HTTP |
+| [resilience/](docs/resilience/README.md) | 弹性模式 - Retry, CircuitBreaker, Bulkhead |
+| [concurrent/](docs/concurrent/README.md) | 并发工具 - Parallel, Benchmark |
+| [util/](docs/util/README.md) | 工具模块 - Auth, I18n, Schema |
+| [optics/](docs/optics/README.md) | 光学类型 - Lens, Iso, Prism |
 
-### Monad 文档
-- [Reader Monad](docs/reader.md)
-- [Writer Monad](docs/writer.md)
-- [State Monad](docs/state.md)
+### 其他文档
 
-### 高级抽象文档
-- [Lens](docs/lens.md)
-- [Memoize](docs/memoize.md)
-- [Monoid](docs/monoid.md)
+- [用户指南](docs/guide.md)
+- [API 稳定性](docs/api-stability.md)
