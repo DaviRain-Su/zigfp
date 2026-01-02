@@ -354,30 +354,32 @@ pub const manyOption = alternative.manyOption;
 pub const someOption = alternative.someOption;
 pub const optionalOption = alternative.optionalOption;
 
-/// Prelude - 函数式编程标准库
-pub const prelude = @import("prelude.zig");
-// 类型别名
-pub const Maybe = prelude.Maybe;
-pub const PreludeEither = prelude.Either;
-pub const Id = prelude.Id;
-pub const Unit = prelude.Unit;
-// 常用函数
-pub const idFn = prelude.id;
-pub const constantFn = prelude.constant;
-pub const compose2Fn = prelude.compose2;
-pub const whenFn = prelude.when;
-pub const unlessFn = prelude.unless;
-pub const someFn = prelude.some;
-pub const noneFn = prelude.none;
-pub const okFn = prelude.ok;
-pub const errFn = prelude.err;
-pub const pureFn = prelude.pure;
-pub const unitFn = prelude.unit;
-// 运算符常量
-pub const fmapOp = prelude.fmap;
-pub const apOp = prelude.ap;
-pub const bindOp = prelude.bind;
-pub const combineOp = prelude.combine_op;
+/// Distributive - 分配律
+pub const distributive = @import("distributive.zig");
+pub const distributeOption = distributive.distributeOption;
+pub const codistributeOption = distributive.codistributeOption;
+pub const distributePairOption = distributive.distributePairOption;
+
+// ============ v0.7.0 Monad 组合和工具 ============
+
+/// Selective Applicative Functors - 介于 Applicative 和 Monad 之间的抽象
+pub const selective = @import("selective.zig");
+pub const SelectiveEither = selective.Either;
+pub const selectOption = selective.selectOption;
+pub const branchOption = selective.branchOption;
+pub const ifSOption = selective.ifSOption;
+pub const whenSOption = selective.whenSOption;
+pub const selectMOption = selective.selectMOption;
+pub const eitherToSelector = selective.combinators.eitherToSelector;
+pub const conditionalSelector = selective.combinators.conditionalSelector;
+pub const firstSuccess = selective.combinators.firstSuccess;
+pub const conditionalExecution = selective.combinators.conditionalExecution;
+
+/// Monad Transformers - 组合不同 Monad
+pub const mtl = @import("mtl.zig");
+pub const EitherT = mtl.EitherT;
+pub const OptionT = mtl.OptionT;
+pub const IdentityMonad = mtl.Identity;
 
 // ============ 测试 ============
 

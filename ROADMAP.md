@@ -144,9 +144,9 @@ src/
 |------|------|------|
 | `prelude.zig` | ✅ | Prelude - 常用函数、类型别名和运算符重载 |
 | `category.zig` | ✅ | Category Theory - 函数范畴、Kleisli范畴 |
-| `mtl.zig` | ⏳ | Monad Transformer Library (待实现) |
-| `distributive.zig` | ⏳ | Distributive Laws (待实现) |
-| `selective.zig` | ⏳ | Selective Applicative Functors (待实现) |
+| `mtl.zig` | 🔄 | Monad Transformer Library (EitherT/OptionT完成) |
+| `distributive.zig` | ✅ | Distributive Laws (分配律实现) |
+| `selective.zig` | ✅ | Selective Applicative Functors (选择性应用函子) |
 
 ### v0.8.0 - 性能优化与基准测试
 
