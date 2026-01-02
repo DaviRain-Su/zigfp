@@ -228,10 +228,67 @@ pub fn build(b: *std.Build) void {
     const prelude_step = b.step("example-prelude", "Run prelude example");
     prelude_step.dependOn(&run_prelude.step);
 
+    // Parallel example
+    const parallel_example = b.addExecutable(.{
+        .name = "parallel_example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/parallel_example.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(parallel_example);
+
+    const run_parallel = b.addRunArtifact(parallel_example);
+    const parallel_step = b.step("example-parallel", "Run parallel computing example");
+    parallel_step.dependOn(&run_parallel.step);
+
+    // Resilience example
+    const resilience_example = b.addExecutable(.{
+        .name = "resilience_example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/resilience_example.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(resilience_example);
+
+    const run_resilience = b.addRunArtifact(resilience_example);
+    const resilience_step = b.step("example-resilience", "Run resilience patterns example");
+    resilience_step.dependOn(&run_resilience.step);
+
+    // Network example
+    const network_example = b.addExecutable(.{
+        .name = "network_example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/network_example.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(network_example);
+
+    const run_network = b.addRunArtifact(network_example);
+    const network_step = b.step("example-network", "Run network module example");
+    network_step.dependOn(&run_network.step);
+
     // Run all examples
     const examples_step = b.step("examples", "Run all examples");
     examples_step.dependOn(&run_basic.step);
     examples_step.dependOn(&run_monad.step);
     examples_step.dependOn(&run_validation.step);
     examples_step.dependOn(&run_prelude.step);
+    examples_step.dependOn(&run_parallel.step);
+    examples_step.dependOn(&run_resilience.step);
+    examples_step.dependOn(&run_network.step);
 }

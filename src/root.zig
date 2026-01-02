@@ -118,18 +118,69 @@ pub const Parser = parser.Parser;
 pub const JsonValue = parser.JsonValue;
 
 // Network
+pub const TcpConfig = network.TcpConfig;
 pub const TcpClient = network.TcpClient;
+pub const UdpConfig = network.UdpConfig;
 pub const UdpSocket = network.UdpSocket;
+pub const WebSocketConfig = network.WebSocketConfig;
 pub const WebSocketClient = network.WebSocketClient;
+pub const HttpMethod = network.HttpMethod;
+pub const HttpStatus = network.HttpStatus;
+pub const HttpConfig = network.HttpConfig;
 pub const HttpRequest = network.HttpRequest;
 pub const HttpResponse = network.HttpResponse;
+pub const ConnectionPoolConfig = network.ConnectionPoolConfig;
+pub const ConnectionPool = network.ConnectionPool;
 
 // Resilience
+pub const RetryStrategy = resilience.RetryStrategy;
+pub const RetryConfig = resilience.RetryConfig;
+pub const RetryStats = resilience.RetryStats;
 pub const RetryPolicy = resilience.RetryPolicy;
+pub const RetryPolicyBuilder = resilience.RetryPolicyBuilder;
+pub const retryPolicy = resilience.retryPolicy;
+pub const CircuitState = resilience.CircuitState;
+pub const CircuitBreakerConfig = resilience.CircuitBreakerConfig;
+pub const CircuitStats = resilience.CircuitStats;
 pub const CircuitBreaker = resilience.CircuitBreaker;
+pub const CircuitBreakerBuilder = resilience.CircuitBreakerBuilder;
+pub const circuitBreaker = resilience.circuitBreaker;
+pub const BulkheadConfig = resilience.BulkheadConfig;
+pub const BulkheadStats = resilience.BulkheadStats;
 pub const Bulkhead = resilience.Bulkhead;
+pub const TimeoutConfig = resilience.TimeoutConfig;
+pub const TimeoutStats = resilience.TimeoutStats;
+pub const Timeout = resilience.Timeout;
+pub const FallbackStrategy = resilience.FallbackStrategy;
+pub const FallbackConfig = resilience.FallbackConfig;
+pub const FallbackStats = resilience.FallbackStats;
+pub const Fallback = resilience.Fallback;
 
-// Concurrent
+// Concurrent - Sequential operations
+pub const seqMap = concurrent.seqMap;
+pub const seqFilter = concurrent.seqFilter;
+pub const seqReduce = concurrent.seqReduce;
+pub const seqFold = concurrent.seqFold;
+pub const seqZip = concurrent.seqZip;
+
+// Concurrent - Batch operations
+pub const BatchConfig = concurrent.BatchConfig;
+pub const batchMap = concurrent.batchMap;
+pub const batchReduce = concurrent.batchReduce;
+
+// Concurrent - Par Monad
+pub const Par = concurrent.Par;
+pub const parZip = concurrent.parZip;
+pub const parSequence = concurrent.parSequence;
+
+// Concurrent - Real Thread Pool
+pub const RealThreadPoolConfig = concurrent.RealThreadPoolConfig;
+pub const RealThreadPool = concurrent.RealThreadPool;
+pub const realParMap = concurrent.realParMap;
+pub const realParFilter = concurrent.realParFilter;
+pub const realParReduce = concurrent.realParReduce;
+
+// Concurrent - Benchmark
 pub const BenchmarkResult = concurrent.BenchmarkResult;
 
 // Util

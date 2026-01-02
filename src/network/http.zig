@@ -30,6 +30,88 @@ pub const HttpMethod = enum {
     }
 };
 
+/// HTTP 状态码枚举
+pub const HttpStatus = enum(u16) {
+    // 2xx Success
+    ok = 200,
+    created = 201,
+    accepted = 202,
+    no_content = 204,
+
+    // 3xx Redirection
+    moved_permanently = 301,
+    found = 302,
+    see_other = 303,
+    not_modified = 304,
+    temporary_redirect = 307,
+    permanent_redirect = 308,
+
+    // 4xx Client Error
+    bad_request = 400,
+    unauthorized = 401,
+    forbidden = 403,
+    not_found = 404,
+    method_not_allowed = 405,
+    conflict = 409,
+    gone = 410,
+    unprocessable_entity = 422,
+    too_many_requests = 429,
+
+    // 5xx Server Error
+    internal_server_error = 500,
+    not_implemented = 501,
+    bad_gateway = 502,
+    service_unavailable = 503,
+    gateway_timeout = 504,
+
+    /// 检查是否为成功状态 (2xx)
+    pub fn isSuccess(self: HttpStatus) bool {
+        const status_code = @intFromEnum(self);
+        return status_code >= 200 and status_code < 300;
+    }
+
+    /// 检查是否为重定向状态 (3xx)
+    pub fn isRedirect(self: HttpStatus) bool {
+        const status_code = @intFromEnum(self);
+        return status_code >= 300 and status_code < 400;
+    }
+
+    /// 检查是否为客户端错误 (4xx)
+    pub fn isClientError(self: HttpStatus) bool {
+        const status_code = @intFromEnum(self);
+        return status_code >= 400 and status_code < 500;
+    }
+
+    /// 检查是否为服务器错误 (5xx)
+    pub fn isServerError(self: HttpStatus) bool {
+        const status_code = @intFromEnum(self);
+        return status_code >= 500 and status_code < 600;
+    }
+
+    /// 获取数值状态码
+    pub fn toCode(self: HttpStatus) u16 {
+        return @intFromEnum(self);
+    }
+};
+
+/// HTTP 客户端配置
+pub const HttpConfig = struct {
+    /// 基础 URL
+    base_url: []const u8 = "",
+    /// 超时时间（毫秒）
+    timeout_ms: u64 = 30000,
+    /// 是否跟随重定向
+    follow_redirects: bool = true,
+    /// 最大重定向次数
+    max_redirects: u8 = 5,
+    /// 是否验证 SSL 证书
+    verify_ssl: bool = true,
+    /// 用户代理
+    user_agent: []const u8 = "zigFP/1.0",
+    /// 默认请求头
+    default_headers: []const HttpHeader = &.{},
+};
+
 /// HTTP请求头
 pub const HttpHeader = struct {
     name: []const u8,

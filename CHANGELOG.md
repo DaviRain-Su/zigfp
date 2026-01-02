@@ -1,5 +1,67 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.6.0] - 2026-01-02 - 文档与示例完善 ✅
+
+### 🎯 新增示例
+
+创建了 3 个新示例文件，展示 zigFP 的高级功能：
+
+#### `examples/parallel_example.zig`
+演示真正的并行计算功能：
+- `RealThreadPool` 线程池创建和管理
+- `realParMap` 并行映射操作
+- `realParFilter` 并行过滤操作
+- `realParReduce` 并行归约操作
+- `Par` Monad 和 `parZip` 组合
+- 批处理操作 `batchMap`
+
+#### `examples/resilience_example.zig`
+演示弹性模式功能：
+- `RetryPolicy` 重试策略（固定间隔、指数退避、线性退避）
+- `CircuitBreaker` 断路器（状态转换、故障阈值）
+- `Bulkhead` 隔板模式（并发限制、资源隔离）
+- `Timeout` 超时控制
+- `Fallback` 降级策略
+
+#### `examples/network_example.zig`
+演示网络模块配置：
+- `TcpConfig` TCP 客户端配置
+- `UdpConfig` UDP 配置
+- `HttpConfig` 和 `HttpStatus` HTTP 配置和状态码
+- `WebSocketConfig` WebSocket 配置
+- 网络与弹性模式的组合使用建议
+
+### 📝 文档更新
+
+- **docs/concurrent/README.md** - 完整的 RealThreadPool API 文档
+  - 线程池创建和配置
+  - 并行操作函数说明
+  - 顺序操作对比
+  - 性能建议
+
+### 🔧 构建系统
+
+- **build.zig** 添加新的构建目标：
+  - `example-parallel` - 运行并行计算示例
+  - `example-resilience` - 运行弹性模式示例
+  - `example-network` - 运行网络模块示例
+  - `examples` 目标现在包含所有 7 个示例
+
+### 📦 root.zig 导出扩展
+
+添加了更多类型的便捷导出：
+- 并发模块: `seqMap/Filter/Reduce/Fold/Zip`, `BatchConfig`, `batchMap/Reduce`, `Par`, `parZip/Sequence`, `RealThreadPool`, `realParMap/Filter/Reduce`
+- 弹性模块: `retryPolicy`, `circuitBreaker`, `Timeout`, `Fallback` 及相关配置类型
+- 网络模块: `TcpConfig`, `UdpConfig`, `WebSocketConfig`, `HttpMethod`, `HttpStatus`, `HttpConfig`
+
+### 📊 统计数据
+- **总测试数**: 742个（全部通过）
+- **新增示例**: 3 个
+- **示例总数**: 7 个
+- **无内存泄漏**
+
+---
+
 ## [v1.5.0] - 2026-01-02 - 真正并行计算 ✅
 
 ### 🎯 新增功能

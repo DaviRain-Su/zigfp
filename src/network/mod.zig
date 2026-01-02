@@ -41,6 +41,8 @@ pub const HttpMethod = http.HttpMethod;
 pub const HttpHeader = http.HttpHeader;
 pub const HttpRequest = http.HttpRequest;
 pub const HttpResponse = http.HttpResponse;
+pub const HttpConfig = http.HttpConfig;
+pub const HttpStatus = http.HttpStatus;
 
 // ============ Connection Pool ============
 pub const ConnectionPool = connection_pool.ConnectionPool;

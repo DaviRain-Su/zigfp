@@ -306,12 +306,17 @@ src/
 | `realParReduce` | ✅ | 真正并行的 reduce 操作 |
 | 测试验证 | ✅ | 742 tests 全部通过 |
 
-### v1.6.0 - 文档与示例完善 ⏳
+### v1.6.0 - 文档与示例完善 ✅
 
 | 任务 | 状态 | 说明 |
 |------|------|------|
-| 文档完善 | ⏳ | README、API 文档、教程 |
-| 更多示例 | ⏳ | parallel、resilience、network 示例 |
+| `parallel_example.zig` | ✅ | RealThreadPool、realParMap/Filter/Reduce 示例 |
+| `resilience_example.zig` | ✅ | RetryPolicy、CircuitBreaker、Bulkhead、Timeout、Fallback 示例 |
+| `network_example.zig` | ✅ | TCP/UDP/HTTP/WebSocket 配置和概念示例 |
+| 文档更新 | ✅ | docs/concurrent/README.md 添加 RealThreadPool 文档 |
+| 构建系统 | ✅ | build.zig 添加 example-parallel/resilience/network 目标 |
+| root.zig 导出 | ✅ | 添加更多类型导出供示例使用 |
+| 测试验证 | ✅ | 742 tests 全部通过 |
 
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。

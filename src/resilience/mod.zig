@@ -19,13 +19,26 @@ pub const fallback = @import("fallback.zig");
 pub const RetryStrategy = retry.RetryStrategy;
 pub const RetryConfig = retry.RetryConfig;
 pub const RetryResult = retry.RetryResult;
+pub const RetryStats = retry.RetryStats;
 pub const RetryPolicy = retry.RetryPolicy;
+pub const RetryPolicyBuilder = retry.RetryPolicyBuilder;
+pub const retryPolicy = retry.retryPolicy;
+pub const Retrier = retry.Retrier;
+pub const retryFn = retry.retry;
+pub const retryWithDefaults = retry.retryWithDefaults;
+pub const ConditionalRetrier = retry.ConditionalRetrier;
+pub const RetryEffect = retry.RetryEffect;
 
 // ============ CircuitBreaker ============
 pub const CircuitState = circuit_breaker.CircuitState;
 pub const CircuitBreakerError = circuit_breaker.CircuitBreakerError;
 pub const CircuitBreakerConfig = circuit_breaker.CircuitBreakerConfig;
+pub const CircuitStats = circuit_breaker.CircuitStats;
+pub const StateChangeEvent = circuit_breaker.StateChangeEvent;
 pub const CircuitBreaker = circuit_breaker.CircuitBreaker;
+pub const CircuitBreakerBuilder = circuit_breaker.CircuitBreakerBuilder;
+pub const circuitBreaker = circuit_breaker.circuitBreaker;
+pub const CircuitBreakerEffect = circuit_breaker.CircuitBreakerEffect;
 
 // ============ Bulkhead ============
 pub const BulkheadError = bulkhead.BulkheadError;
@@ -45,6 +58,8 @@ pub const Deadline = timeout.Deadline;
 pub const FallbackStrategy = fallback.FallbackStrategy;
 pub const FallbackConfig = fallback.FallbackConfig;
 pub const FallbackStats = fallback.FallbackStats;
+pub const FallbackResult = fallback.FallbackResult;
+pub const Fallback = fallback.Fallback;
 
 test {
     std.testing.refAllDecls(@This());
