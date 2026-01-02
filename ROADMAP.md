@@ -36,7 +36,10 @@ src/
 ├── io.zig           # IO - 函数式 IO 操作
 ├── iterator.zig     # Iterator - 函数式迭代器
 ├── validation.zig   # Validation - 累积错误验证
-└── free.zig         # Free Monad + Trampoline
+├── free.zig         # Free Monad + Trampoline
+├── cont.zig         # Continuation Monad - CPS 风格
+├── effect.zig       # Effect System - 代数效果
+└── parser.zig       # Parser Combinators - 组合式解析器
 ```
 
 ## 版本路线图
@@ -94,13 +97,23 @@ src/
 | `validation.zig` | ✅ | Validation - 累积错误验证 |
 | `free.zig` | ✅ | Free Monad + Trampoline（栈安全递归） |
 
-### v0.3.0 - 未来计划
+### v0.3.0 - 高级抽象 ✅
 
 | 模块 | 状态 | 说明 |
 |------|------|------|
-| `cont.zig` | ⏳ | Continuation Monad |
-| `effect.zig` | ⏳ | Effect System |
-| `parser.zig` | ⏳ | Parser Combinators |
+| `cont.zig` | ✅ | Continuation Monad - CPS 风格、Trampoline |
+| `effect.zig` | ✅ | Effect System - 代数效果、Reader/State/Error/Log |
+| `parser.zig` | ✅ | Parser Combinators - 组合式解析器 |
+
+### v0.4.0 - 未来计划
+
+| 模块 | 状态 | 说明 |
+|------|------|------|
+| `applicative.zig` | ⏳ | Applicative Functor |
+| `traversable.zig` | ⏳ | Traversable |
+| `foldable.zig` | ⏳ | Foldable |
+| `arrow.zig` | ⏳ | Arrow 类型 |
+| `comonad.zig` | ⏳ | Comonad |
 
 ## 特性对照表
 
@@ -122,6 +135,9 @@ src/
 | Validation | `Validation` | `Validated` | - | `Validation(T,E)` |
 | Free | `Free` | `Free` | - | `Free(F,A)` |
 | Trampoline | `Trampoline` | `Trampoline` | - | `Trampoline(A)` |
+| Continuation | `Cont` | `Cont` | - | `Cont(R,A)` |
+| Effect | `Eff` | `ZIO` | - | `Effect(E,A)` |
+| Parser | `Parsec` | `FastParse` | `nom` | `Parser(T)` |
 
 ## 性能特性
 

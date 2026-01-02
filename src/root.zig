@@ -162,6 +162,45 @@ pub const ConsoleIO = free.ConsoleIO;
 pub const printLine = free.printLine;
 pub const readLine = free.readLine;
 
+// ============ v0.3.0 高级抽象 ============
+
+/// Continuation Monad - 控制流抽象
+pub const cont = @import("cont.zig");
+pub const Cont = cont.Cont;
+pub const CPS = cont.CPS;
+pub const TrampolineCPS = cont.TrampolineCPS;
+
+/// Effect System - 代数效果系统
+pub const effect = @import("effect.zig");
+pub const Effect = effect.Effect;
+pub const EffectTag = effect.EffectTag;
+pub const Handler = effect.Handler;
+pub const ReaderEffect = effect.ReaderEffect;
+pub const StateEffect = effect.StateEffect;
+pub const ErrorEffect = effect.ErrorEffect;
+pub const LogEffect = effect.LogEffect;
+pub const runPure = effect.runPure;
+
+/// Parser Combinators - 组合式解析器
+pub const parser = @import("parser.zig");
+pub const Parser = parser.Parser;
+pub const ParseResult = parser.ParseResult;
+pub const ParseError = parser.ParseError;
+// 基础解析器
+pub const anyChar = parser.anyChar;
+pub const digit = parser.digit;
+pub const letter = parser.letter;
+pub const alphaNum = parser.alphaNum;
+pub const whitespace = parser.whitespace;
+pub const eof = parser.eof;
+pub const integer = parser.integer;
+pub const skipWhitespace = parser.skipWhitespace;
+// 组合子
+pub const many = parser.many;
+pub const many1 = parser.many1;
+pub const ManyParser = parser.ManyParser;
+pub const Many1Parser = parser.Many1Parser;
+
 // ============ 测试 ============
 
 test {

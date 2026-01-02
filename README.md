@@ -105,6 +105,14 @@ const sum = fp.sumMonoid.concat(&numbers);  // 15
 | `Free(F, A)` | Free Monad - 可解释 DSL |
 | `Trampoline(A)` | 栈安全递归 |
 
+### 高级抽象 (v0.3.0)
+
+| 模块 | 说明 |
+|------|------|
+| `Cont(R, A)` | Continuation Monad - CPS 风格 |
+| `Effect(E, A)` | Effect System - 代数效果 |
+| `Parser(T)` | Parser Combinators - 组合式解析器 |
+
 ## 示例
 
 ### Option 链式处理
@@ -216,6 +224,9 @@ zig build test
 - [Iterator](docs/iterator.md)
 - [Validation](docs/validation.md)
 - [Free Monad](docs/free.md)
+- [Continuation](docs/cont.md)
+- [Effect System](docs/effect.md)
+- [Parser Combinators](docs/parser.md)
 
 ## Zig 版本
 
