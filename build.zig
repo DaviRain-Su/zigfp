@@ -153,4 +153,66 @@ pub fn build(b: *std.Build) void {
     //
     // Lastly, the Zig build system is relatively simple and self-contained,
     // and reading its source code will allow you to master it.
+
+    // ============ Examples ============
+
+    // Basic usage example
+    const basic_example = b.addExecutable(.{
+        .name = "basic_usage",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/basic_usage.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(basic_example);
+
+    const run_basic = b.addRunArtifact(basic_example);
+    const basic_step = b.step("example-basic", "Run basic usage example");
+    basic_step.dependOn(&run_basic.step);
+
+    // Monad usage example
+    const monad_example = b.addExecutable(.{
+        .name = "monad_usage",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/monad_usage.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(monad_example);
+
+    const run_monad = b.addRunArtifact(monad_example);
+    const monad_step = b.step("example-monad", "Run monad usage example");
+    monad_step.dependOn(&run_monad.step);
+
+    // Validation example
+    const validation_example = b.addExecutable(.{
+        .name = "validation_example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/validation_example.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(validation_example);
+
+    const run_validation = b.addRunArtifact(validation_example);
+    const validation_step = b.step("example-validation", "Run validation example");
+    validation_step.dependOn(&run_validation.step);
+
+    // Run all examples
+    const examples_step = b.step("examples", "Run all examples");
+    examples_step.dependOn(&run_basic.step);
+    examples_step.dependOn(&run_monad.step);
+    examples_step.dependOn(&run_validation.step);
 }

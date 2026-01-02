@@ -354,6 +354,35 @@ pub const distributeOption = distributive.distributeOption;
 pub const codistributeOption = distributive.codistributeOption;
 pub const distributePairOption = distributive.distributePairOption;
 
+/// Prelude - 函数式编程常用函数和类型别名
+pub const prelude = @import("prelude.zig");
+pub const Maybe = prelude.Maybe;
+pub const PreludeEither = prelude.Either;
+pub const PreludeId = prelude.Id;
+pub const Unit = prelude.Unit;
+pub const preludeId = prelude.id;
+pub const preludeConstant = prelude.constant;
+pub const preludeCompose2 = prelude.compose2;
+pub const preludePipe = prelude.pipe;
+pub const when = prelude.when;
+pub const unless = prelude.unless;
+pub const whenM = prelude.whenM;
+pub const boolToOption = prelude.boolToOption;
+pub const optionToBool = prelude.optionToBool;
+pub const preludeSome = prelude.some;
+pub const preludeNone = prelude.none;
+pub const preludeOk = prelude.ok;
+pub const preludeErr = prelude.err;
+pub const preludePure = prelude.pure;
+pub const preludeUnit = prelude.unit;
+
+/// Category Theory - 范畴论基础
+pub const category = @import("category.zig");
+pub const function_category = category.function_category;
+pub const kleisli = category.kleisli;
+pub const covariant = category.covariant;
+pub const category_laws = category.laws;
+
 // ============ v0.7.0 Monad 组合和工具 ============
 
 /// Selective Applicative Functors - 介于 Applicative 和 Monad 之间的抽象
