@@ -254,6 +254,78 @@ pub const Store = comonad.Store;
 pub const Env = comonad.Env;
 pub const Traced = comonad.Traced;
 
+// ============ v0.5.0 高级抽象扩展 ============
+
+/// Bifunctor - 双参数 Functor
+pub const bifunctor = @import("bifunctor.zig");
+pub const BifunctorPair = bifunctor.Pair;
+pub const BifunctorEither = bifunctor.Either;
+pub const ResultBifunctor = bifunctor.ResultBifunctor;
+pub const These = bifunctor.These;
+pub const pair = bifunctor.pair;
+pub const left = bifunctor.left;
+pub const right = bifunctor.right;
+
+/// Profunctor - 输入逆变、输出协变的 Functor
+pub const profunctor_mod = @import("profunctor.zig");
+pub const FunctionProfunctor = profunctor_mod.FunctionProfunctor;
+pub const Star = profunctor_mod.Star;
+pub const Costar = profunctor_mod.Costar;
+pub const UpStar = profunctor_mod.UpStar;
+pub const StrongProfunctor = profunctor_mod.StrongProfunctor;
+pub const ChoiceProfunctor = profunctor_mod.ChoiceProfunctor;
+pub const profunctor = profunctor_mod.profunctor;
+pub const dimapFn = profunctor_mod.dimap;
+pub const lmapFn = profunctor_mod.lmapFn;
+pub const rmapFn = profunctor_mod.rmapFn;
+pub const starFn = profunctor_mod.star;
+pub const costarFn = profunctor_mod.costar;
+
+/// Optics - 数据结构的焦点抽象
+pub const optics = @import("optics.zig");
+pub const Iso = optics.Iso;
+pub const OpticsLens = optics.Lens;
+pub const Prism = optics.Prism;
+pub const Affine = optics.Affine;
+pub const OpticsGetter = optics.Getter;
+pub const OpticsSetter = optics.Setter;
+pub const OpticsFold = optics.Fold;
+pub const isoFn = optics.iso;
+pub const lensFn = optics.lens;
+pub const prismFn = optics.prism;
+pub const affineFn = optics.affine;
+pub const getterFn = optics.getter;
+pub const somePrism = optics.somePrism;
+pub const headAffine = optics.headAffine;
+pub const identityIso = optics.identityIso;
+
+/// Stream - 惰性无限流
+pub const stream = @import("stream.zig");
+pub const StreamType = stream.Stream;
+pub const iterateStream = stream.iterate;
+pub const repeatStreamFn = stream.repeatStream;
+pub const cycleStream = stream.cycle;
+pub const rangeStreamFn = stream.rangeStream;
+pub const unfoldStream = stream.unfold;
+pub const MapStream = stream.MapStream;
+pub const FilterStream = stream.FilterStream;
+pub const ZipWithStream = stream.ZipWithStream;
+pub const TakeWhileStream = stream.TakeWhileStream;
+pub const ScanlStream = stream.ScanlStream;
+pub const mapStreamFn = stream.mapStream;
+pub const filterStreamFn = stream.filterStream;
+pub const zipWithStream = stream.zipWith;
+pub const takeWhileStream = stream.takeWhile;
+pub const scanlStream = stream.scanl;
+
+/// Zipper - 高效局部数据更新
+pub const zipper = @import("zipper.zig");
+pub const ListZipper = zipper.ListZipper;
+pub const BinaryTree = zipper.BinaryTree;
+pub const TreeZipper = zipper.TreeZipper;
+pub const listZipper = zipper.listZipper;
+pub const treeZipper = zipper.treeZipper;
+
 // ============ 测试 ============
 
 test {
