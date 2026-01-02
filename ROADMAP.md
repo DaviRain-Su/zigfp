@@ -362,6 +362,18 @@ src/
 | root.zig 导出 | ✅ | 所有新类型和函数 |
 | 测试验证 | ✅ | 872 tests 全部通过 |
 
+### v2.0.0 - 高级类型与工具 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| `ior.zig` | ✅ | Ior - 带警告的成功类型（Left/Right/Both） |
+| `tuple.zig` | ✅ | Tuple 工具 - Pair、Triple 及函数式操作 |
+| `natural.zig` | ✅ | Natural Transformation - Option/Result/切片 互转 |
+| data/mod.zig 导出 | ✅ | Ior、Tuple 类型和函数 |
+| functor/mod.zig 导出 | ✅ | Natural Transformation 函数 |
+| root.zig 导出 | ✅ | 所有新类型和函数 |
+| 测试验证 | ✅ | 915 tests 全部通过 |
+
 > **注意**: Zig 的 async/await 功能目前正在重新设计中（0.11+ 已移除），
 > 因此 `async.zig` 模块标记为**未来实现**，待Zig官方稳定async支持后再行开发。
 

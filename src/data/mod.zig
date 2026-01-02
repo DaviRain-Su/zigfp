@@ -17,6 +17,8 @@ pub const comonad = @import("comonad.zig");
 pub const sequence = @import("sequence.zig");
 pub const non_empty = @import("non_empty.zig");
 pub const these = @import("these.zig");
+pub const ior = @import("ior.zig");
+pub const tuple = @import("tuple.zig");
 
 // ============ Stream ============
 pub const StreamType = stream.Stream;
@@ -107,6 +109,25 @@ pub const nonEmptyFromArray = non_empty.nonEmptyFromArray;
 // ============ These ============
 pub const These = these.These;
 pub const fromOptions = these.fromOptions;
+
+// ============ Ior ============
+pub const Ior = ior.Ior;
+pub const iorLeft = ior.iorLeft;
+pub const iorRight = ior.iorRight;
+pub const iorBoth = ior.iorBoth;
+
+// ============ Tuple ============
+pub const TuplePair = tuple.Pair;
+pub const TupleTriple = tuple.Triple;
+pub const pair = tuple.pair;
+pub const tupleDup = tuple.dup;
+pub const fanout = tuple.fanout;
+pub const fanout3 = tuple.fanout3;
+pub const assocL = tuple.assocL;
+pub const assocR = tuple.assocR;
+pub const pairFromArray = tuple.pairFromArray;
+pub const tripleFromArray = tuple.tripleFromArray;
+pub const uncurryPair = tuple.uncurryPair;
 
 test {
     std.testing.refAllDecls(@This());

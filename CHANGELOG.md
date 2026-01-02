@@ -1,5 +1,89 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v2.0.0] - 2026-01-02 - 高级类型与工具 ✅
+
+### 🎯 新增功能
+
+#### Ior - `src/data/ior.zig`
+
+Ior (Inclusive Or) 类型，支持"警告但继续"的场景：
+
+- **构造函数**: `Left`, `Right`, `Both`, `iorLeft`, `iorRight`, `iorBoth`
+- **类型检查**: `isLeft`, `isRight`, `isBoth`, `hasLeft`, `hasRight`
+- **访问器**: `getLeft`, `getRight`, `getBoth`, `leftOr`, `rightOr`
+- **映射**: `map`, `mapLeft`, `bimap`
+- **折叠**: `fold`
+- **转换**: `toOption`, `toResult`, `toResultStrict`, `toThese`, `swap`
+- **静态构造**: `fromResult`, `fromThese`, `fromOptions`
+
+```zig
+// Ior - 警告但继续
+const ior = Ior([]const u8, i32).Both("warning", 42);
+const result = ior.toResult();  // Ok(42), 忽略警告
+const strict = ior.toResultStrict();  // Err("warning")
+
+// 映射操作
+const doubled = ior.map(i32, double);  // Both("warning", 84)
+```
+
+#### Tuple - `src/data/tuple.zig`
+
+函数式编程中的元组工具：
+
+- **Pair(A, B)**: 二元组类型
+- **Triple(A, B, C)**: 三元组类型
+- **访问器**: `first`, `second`, `third`
+- **映射**: `mapFst`, `mapSnd`, `mapThd`, `bimap`, `trimap`
+- **转换**: `swap`, `toArray`, `fold`, `toPairFst`, `toPairSnd`
+- **工具函数**: `dup`, `fanout`, `fanout3`, `assocL`, `assocR`
+
+```zig
+// Pair 操作
+const p = Pair(i32, []const u8).init(42, "hello");
+const swapped = p.swap();  // Pair("hello", 42)
+
+// fanout - 对同一值应用多个函数
+const result = fanout(i32, i32, i32, double, negate, 5);
+// Pair(10, -5)
+```
+
+#### Natural Transformation - `src/functor/natural.zig`
+
+自然变换 - Functor 间的转换：
+
+- **Option/Result 互转**: `optionToResult`, `resultToOption`, `resultErrToOption`
+- **Option/切片 互转**: `optionToSlice`, `sliceHeadOption`, `sliceLastOption`, `sliceAtOption`
+- **嵌套展平**: `flattenOption`, `flattenResult`
+- **类型转换**: `safeCast`, `fromNullable`, `toNullable`
+- **组合**: `composeNat`
+
+```zig
+// Option -> Result
+const opt = Option(i32).Some(42);
+const res = optionToResult(i32, []const u8, opt, "not found");
+
+// 安全类型转换
+const narrow = safeCast(i32, u8, 100);  // Some(100)
+const overflow = safeCast(i32, u8, 300);  // None
+```
+
+### 📦 导出更新
+
+- `root.zig` 新增导出：
+  - Ior: `Ior`, `iorLeft`, `iorRight`, `iorBoth`
+  - Tuple: `TuplePair`, `TupleTriple`, `tuplePair`, `tupleDup`, `fanout`, `fanout3`, `assocL`, `assocR`
+  - Natural: `optionToResult`, `resultToOption`, `sliceHeadOption`, `flattenOption`, `safeCast`, etc.
+- `data/mod.zig` 导出 Ior 和 Tuple 类型
+- `functor/mod.zig` 导出 Natural Transformation 函数
+
+### 📊 测试统计
+
+- 新增 43 个测试（Ior 15 + Tuple 18 + Natural 11 - 1 重复）
+- 总测试数：915 tests
+- 所有测试通过，无内存泄漏
+
+---
+
 ## [v1.9.0] - 2026-01-02 - 数据结构增强 ✅
 
 ### 🎯 新增功能

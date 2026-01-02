@@ -180,10 +180,42 @@ pub const nonEmptyFromArray = data.nonEmptyFromArray;
 pub const These = data.These;
 pub const fromOptions = data.fromOptions;
 
+// Data - Ior
+pub const Ior = data.Ior;
+pub const iorLeft = data.iorLeft;
+pub const iorRight = data.iorRight;
+pub const iorBoth = data.iorBoth;
+
+// Data - Tuple
+pub const TuplePair = data.TuplePair;
+pub const TupleTriple = data.TupleTriple;
+pub const tuplePair = data.pair;
+pub const tupleDup = data.tupleDup;
+pub const fanout = data.fanout;
+pub const fanout3 = data.fanout3;
+pub const assocL = data.assocL;
+pub const assocR = data.assocR;
+pub const pairFromArray = data.pairFromArray;
+pub const tripleFromArray = data.tripleFromArray;
+pub const uncurryPair = data.uncurryPair;
+
 // Optics
 pub const Lens = optics.Lens;
 pub const Iso = optics.Iso;
 pub const Prism = optics.Prism;
+
+// Natural Transformation
+pub const optionToResult = functor.optionToResult;
+pub const resultToOption = functor.resultToOption;
+pub const resultErrToOption = functor.resultErrToOption;
+pub const sliceHeadOption = functor.sliceHeadOption;
+pub const sliceLastOption = functor.sliceLastOption;
+pub const sliceAtOption = functor.sliceAtOption;
+pub const flattenOption = functor.flattenOption;
+pub const flattenResult = functor.flattenResult;
+pub const safeCast = functor.safeCast;
+pub const fromNullable = functor.fromNullable;
+pub const toNullable = functor.toNullable;
 
 // Effect
 pub const IO = effect.IO;
