@@ -24,6 +24,26 @@
 - 基于 Zig 0.15 HTTP API 实现
 - 4个测试用例，验证核心功能
 
+#### 编解码器框架模块 (`src/codec.zig`)
+- 实现 `JsonEncoder`/`JsonDecoder` 用于 JSON 序列化/反序列化
+- 实现 `BinaryEncoder`/`BinaryDecoder` 用于二进制序列化/反序列化
+- 支持基本类型：布尔值、整数、浮点数、结构体
+- 提供便捷函数：`encodeJson()`、`decodeJson()`、`encodeBinary()`、`decodeBinary()`
+- 类型安全的设计，支持编译时类型检查
+- 3个测试用例，验证编解码功能
+
+#### 数据验证框架模块 (`src/validation.zig`)
+- 实现 `Validation(T, E)` Either类型用于验证结果
+- 实现泛型验证器类型 `Validator(T, E)`
+- 提供 `valid()`/`invalid()` 构造函数
+- 实现字符串验证器：`notEmpty()`
+- 实现数值验证器：`min()`、`max()`
+- 提供验证执行函数 `validate()`
+- 错误累积和内存安全设计
+- 3个测试用例，验证验证功能
+
+
+
 ### 🔧 技术改进
 - 修复 Zig 0.15.x API 兼容性问题
 - 确保无内存泄漏的测试验证

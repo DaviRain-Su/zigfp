@@ -181,11 +181,12 @@ pub fn performanceExample() !void {
     // 测试不同的求和实现
     const naive_sum = struct {
         fn naiveSum() void {
-            var result: i32 = 0;
+            var sum: i32 = 0;
             for (0..1000) |i| {
-                result += @as(i32, @intCast(i));
+                sum += @as(i32, @intCast(i));
             }
-            // 避免未使用变量警告
+            // 使用sum避免未使用变量警告
+            std.mem.doNotOptimizeAway(sum);
         }
     }.naiveSum;
 
@@ -208,8 +209,166 @@ pub fn performanceExample() !void {
     std.debug.print("\nPerformance Comparison:\n", .{});
     std.debug.print("Naive sum: {d:.2} ns avg\n", .{result1.mean_duration});
     std.debug.print("Optimized sum: {d:.2} ns avg\n", .{result2.mean_duration});
-    std.debug.print("Speedup: {d:.2}x\n", .{result1.mean_duration / result2.mean_duration});
 }
+
+// ============ Performance Tests ============
+
+// 导入所需的模块
+const option_mod = @import("option.zig");
+const result_mod = @import("result.zig");
+const reader_mod = @import("reader.zig");
+const function_mod = @import("function.zig");
+
+// 导入所需的模块
+const option = @import("option.zig");
+const result = @import("result.zig");
+const reader = @import("reader.zig");
+const function = @import("function.zig");
+
+/// 核心类型性能测试
+pub const CoreTypeBenchmarks = struct {
+    /// Option vs 裸指针性能对比
+    pub fn benchmarkOptionVsPointer(allocator: std.mem.Allocator) !BenchmarkResult {
+        const OptionTest = struct {
+            fn run() void {
+                var opt = option_mod.Some(@as(i32, 42));
+                const value = opt.unwrap();
+                _ = value;
+            }
+        };
+
+        const PointerTest = struct {
+            fn run() void {
+                var ptr: ?*i32 = undefined;
+                var val: i32 = 42;
+                ptr = &val;
+                const deref = ptr.?.*;
+                _ = deref;
+            }
+        };
+
+        // 运行Option测试
+        const bench_result1 = try runBenchmark(allocator, "Option unwrap", OptionTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行指针测试
+        const bench_result2 = try runBenchmark(allocator, "Pointer deref", PointerTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        // 返回性能对比结果（这里简化返回第一个结果）
+        return bench_result1;
+    }
+
+    /// Result vs 异常处理性能对比
+    pub fn benchmarkResultVsError(allocator: std.mem.Allocator) !BenchmarkResult {
+        const ResultTest = struct {
+            fn run() void {
+                var res = result_mod.Ok(@as(i32, 42));
+                const value = res.unwrap();
+                _ = value;
+            }
+        };
+
+        const ErrorTest = struct {
+            fn run() void {
+                const TestError = error{TestFailure};
+                const val: i32 = 42;
+                if (val == 0) return TestError.TestFailure;
+                std.mem.doNotOptimizeAway(val);
+            }
+        };
+
+        // 运行Result测试
+        const bench_result1 = try runBenchmark(allocator, "Result unwrap", ResultTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行异常测试
+        const bench_result2 = try runBenchmark(allocator, "Error handling", ErrorTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// 函数组合性能测试
+pub const FunctionBenchmarks = struct {
+    /// compose vs 直接调用
+    pub fn benchmarkComposeVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {
+        const AddOne = struct {
+            fn run(x: i32) i32 {
+                return x + 1;
+            }
+        };
+
+        const MulTwo = struct {
+            fn run(x: i32) i32 {
+                return x * 2;
+            }
+        };
+
+        // 直接调用
+        const DirectTest = struct {
+            fn run() void {
+                var res = AddOne.run(5);
+                res = MulTwo.run(res);
+                std.mem.doNotOptimizeAway(res);
+            }
+        };
+
+        // 使用compose
+        const composed = function_mod.compose(i32, i32, i32, MulTwo.run, AddOne.run);
+        const ComposeTest = struct {
+            const comp = composed;
+            fn run() void {
+                const res = comp(5);
+                std.mem.doNotOptimizeAway(res);
+            }
+        };
+
+        // 运行直接调用测试
+        const bench_result1 = try runBenchmark(allocator, "Direct call", DirectTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行compose测试
+        const bench_result2 = try runBenchmark(allocator, "Compose call", ComposeTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
+
+/// Monad性能测试
+pub const MonadBenchmarks = struct {
+    /// Reader vs 直接参数传递
+    pub fn benchmarkReaderVsDirect(allocator: std.mem.Allocator) !BenchmarkResult {
+        const ReaderTest = struct {
+            fn run() void {
+                const env = "test environment";
+                var reader_obj = reader_mod.ask([]const u8);
+                const res = reader_obj.run(env);
+                _ = res;
+            }
+        };
+
+        const DirectTest = struct {
+            fn run() void {
+                const env = "test environment";
+                const res = env;
+                _ = res;
+            }
+        };
+
+        // 运行Reader测试
+        const bench_result1 = try runBenchmark(allocator, "Reader monad", ReaderTest.run, 10000);
+        defer bench_result1.deinit(allocator);
+
+        // 运行直接参数测试
+        const bench_result2 = try runBenchmark(allocator, "Direct param", DirectTest.run, 10000);
+        defer bench_result2.deinit(allocator);
+
+        return bench_result1;
+    }
+};
 
 // ============ 测试 ============
 
@@ -218,19 +377,20 @@ test "Benchmark basic functionality" {
 
     const func = struct {
         fn testFunction() void {
-            var result: i32 = 0;
-            for (0..100) |i| {
-                result += @as(i32, @intCast(i));
+            var sum: i32 = 0;
+            for (0..1000) |i| {
+                sum += @as(i32, @intCast(i));
             }
-            // 避免未使用变量警告
+            // 使用sum避免未使用变量警告
+            std.mem.doNotOptimizeAway(sum);
         }
     }.testFunction;
 
-    const result = try bench.runBenchmark("sum loop", func, 100);
-    var mutable_result = result;
+    const bench_result = try bench.runBenchmark("sum loop", func, 100);
+    var mutable_result = bench_result;
     defer mutable_result.deinit(std.testing.allocator);
 
-    try std.testing.expect(result.iterations == 100);
-    try std.testing.expect(result.mean_duration > 0);
-    try std.testing.expect(result.min_duration <= result.max_duration);
+    try std.testing.expect(bench_result.iterations == 100);
+    try std.testing.expect(bench_result.mean_duration > 0);
+    try std.testing.expect(bench_result.min_duration <= bench_result.max_duration);
 }

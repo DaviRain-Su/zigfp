@@ -1,11 +1,12 @@
-//! 并行计算抽象
+//! 并发计算抽象
 //!
-//! 基础的并行计算支持。
+//! 基础的并发计算支持。注意：当前实现为顺序执行，
+//! 真正的并行实现需要线程池和调度器支持。
 
 const std = @import("std");
 
-/// 并行映射数组
-pub fn parMap(
+/// 顺序映射数组（为未来并行实现预留接口）
+pub fn seqMap(
     comptime A: type,
     comptime B: type,
     allocator: std.mem.Allocator,
@@ -19,8 +20,8 @@ pub fn parMap(
     return result;
 }
 
-/// 并行过滤
-pub fn parFilter(
+/// 顺序过滤（为未来并行实现预留接口）
+pub fn seqFilter(
     comptime A: type,
     allocator: std.mem.Allocator,
     slice: []const A,
@@ -48,11 +49,11 @@ pub fn parFilter(
 
 // ============ 测试 ============
 
-test "parMap" {
+test "seqMap" {
     const allocator = std.testing.allocator;
     const nums = [_]i32{ 1, 2, 3, 4, 5 };
 
-    const result = try parMap(i32, i32, allocator, &nums, struct {
+    const result = try seqMap(i32, i32, allocator, &nums, struct {
         fn double(x: i32) i32 {
             return x * 2;
         }
@@ -64,11 +65,11 @@ test "parMap" {
     try std.testing.expectEqual(@as(i32, 10), result[4]);
 }
 
-test "parFilter" {
+test "seqFilter" {
     const allocator = std.testing.allocator;
     const nums = [_]i32{ 1, 2, 3, 4, 5 };
 
-    const result = try parFilter(i32, allocator, &nums, struct {
+    const result = try seqFilter(i32, allocator, &nums, struct {
         fn isEven(x: i32) bool {
             return @rem(x, 2) == 0;
         }

@@ -143,13 +143,7 @@ pub const validation = @import("validation.zig");
 pub const Validation = validation.Validation;
 pub const valid = validation.valid;
 pub const invalid = validation.invalid;
-pub const invalidMany = validation.invalidMany;
 pub const Validator = validation.Validator;
-pub const validator = validation.validator;
-pub const StringError = validation.StringError;
-pub const NumberError = validation.NumberError;
-pub const notEmpty = validation.notEmpty;
-pub const validateAll = validation.validateAll;
 
 /// Free Monad - 可解释的 DSL
 pub const free = @import("free.zig");
@@ -399,8 +393,8 @@ pub const fileExists = file_system.fileExists;
 
 /// Parallel - 并行计算抽象
 pub const parallel = @import("parallel.zig");
-pub const parMap = parallel.parMap;
-pub const parFilter = parallel.parFilter;
+pub const seqMap = parallel.seqMap;
+pub const seqFilter = parallel.seqFilter;
 
 // ============ 测试 ============
 
