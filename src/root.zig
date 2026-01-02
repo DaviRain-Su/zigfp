@@ -381,6 +381,14 @@ pub const EitherT = mtl.EitherT;
 pub const OptionT = mtl.OptionT;
 pub const IdentityMonad = mtl.Identity;
 
+// ============ v0.8.0 性能优化与基准测试 ============
+
+/// Benchmark - 性能基准测试框架
+pub const benchmark = @import("benchmark.zig");
+pub const Benchmark = benchmark.Benchmark;
+pub const BenchmarkResult = benchmark.BenchmarkResult;
+pub const runBenchmark = benchmark.runBenchmark;
+
 // ============ 测试 ============
 
 test {
