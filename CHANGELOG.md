@@ -1,5 +1,106 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v1.4.1] - 2026-01-02 - 遗留任务修复 ✅
+
+### 🎯 修复内容
+
+#### Monad Transformer hoist 实现 (mtl.zig)
+完成了 v0.7.0 遗留的 `hoist` 函数实现：
+
+- `hoist.optionT` - 转换 OptionT 的底层 Monad
+- `hoist.eitherT` - 转换 EitherT 的底层 Monad
+- `hoist.writerT` - 转换 WriterT 的底层 Monad
+- `hoist.readerT` - 转换 ReaderT 的底层 Monad
+- `hoist.stateT` - 转换 StateT 的底层 Monad
+
+`hoist` 允许在相同 Transformer 类型间转换基础 Monad，通过自然变换实现。
+这对于在不同效果层之间转换非常有用。
+
+#### Story 文件同步
+- 更新 `v0.7.0-monad-composition.md` - 标记 hoist 为已完成
+- 更新 `v0.8.0-effect-system-extension.md` - 标记网络效果为已完成（v1.2.0 实现）
+
+### 📊 统计数据
+- **总测试数**: 737个（从 734 增加，全部通过）
+- **新增测试**: 3个 hoist 测试
+- **无内存泄漏**
+
+---
+
+## [v1.4.0] - 2026-01-02 - 项目结构重组 ✅
+
+### 🎯 主要变更
+
+#### 源代码模块化重组
+将 60+ 扁平源文件重组为 13 个模块化子目录，提升代码组织性和可维护性：
+
+| 模块 | 路径 | 内容 |
+|------|------|------|
+| `core` | `src/core/` | option, result, lazy, validation |
+| `monad` | `src/monad/` | reader, writer, state, cont, free, mtl, selective |
+| `functor` | `src/functor/` | functor, applicative, bifunctor, profunctor, distributive |
+| `algebra` | `src/algebra/` | semigroup, monoid, alternative, foldable, traversable, category |
+| `data` | `src/data/` | stream, zipper, iterator, arrow, comonad |
+| `function` | `src/function/` | function, pipe, memoize |
+| `effect` | `src/effect/` | effect, io, file_system, random, time, config |
+| `parser` | `src/parser/` | parser, json, codec |
+| `network` | `src/network/` | tcp, udp, websocket, http, connection_pool, network |
+| `resilience` | `src/resilience/` | retry, circuit_breaker, bulkhead, timeout, fallback |
+| `concurrent` | `src/concurrent/` | parallel, benchmark |
+| `util` | `src/util/` | auth, i18n, schema |
+| `optics` | `src/optics/` | lens, optics |
+
+#### 模块入口文件
+- 每个子目录创建 `mod.zig` 作为模块入口
+- 统一的导入和导出模式
+- 包含 `test { std.testing.refAllDecls(@This()); }` 确保测试覆盖
+
+#### 跨模块导入修复
+修复 16 个文件的跨模块导入路径：
+- `algebra/` - alternative, traversable, category
+- `functor/` - functor, profunctor, distributive
+- `monad/` - writer, selective, mtl
+- `data/` - stream, zipper, iterator
+- `optics/optics.zig`
+- `network/http.zig`
+- `util/schema.zig`
+- `concurrent/benchmark.zig`
+
+#### 入口文件更新
+- `src/root.zig` - 重写为模块化导入，聚合所有子模块
+- `src/prelude.zig` - 更新导入路径
+- 添加缺失的 API 导出：
+  - `sumMonoid`, `productMonoid` (Monoid)
+  - `ask`, `asks` (Reader Monad)
+  - `tell` (Writer Monad)
+  - `get`, `modify` (State Monad)
+
+#### 文档结构重组
+`docs/` 目录镜像 `src/` 结构：
+- 创建 13 个模块子目录
+- 每个目录包含 `README.md` 和对应的 API 文档
+- 移动现有 `.md` 文件到对应子目录
+
+#### CI/CD 更新
+- `examples/prelude_example.zig` - 修复为使用 `@import("zigfp")`
+- `build.zig` - 添加 `example-prelude` 构建目标
+- `.github/workflows/ci.yml` - 添加 prelude example 构建步骤
+
+### 📊 统计数据
+- **总测试数**: 734个（全部通过）
+- **模块数**: 13个子目录
+- **mod.zig 文件**: 13个
+- **修复的导入**: 16个文件
+- **无内存泄漏**
+
+### 🔧 技术说明
+- **Zig 版本**: 0.15.2
+- **导入模式**: 子目录使用 `../` 相对路径进行跨模块导入
+- **模块模式**: 每个 `mod.zig` 导入子模块并重新导出公共类型
+- **测试模式**: 每个 `mod.zig` 包含 `refAllDecls` 测试
+
+---
+
 ## [v1.3.0] - 2026-01-02 - 弹性模式 ✅
 
 ### 🎯 新增功能

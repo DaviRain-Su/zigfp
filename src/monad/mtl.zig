@@ -533,6 +533,112 @@ pub fn writerT(comptime M: type, comptime W: type, comptime A: type, inner: M) W
     return WriterT(M, W, A).init(inner);
 }
 
+// ============ Hoist 操作 ============
+
+/// Hoist - 在相同 Transformer 类型间转换基础 Monad
+///
+/// hoist 允许我们改变 Transformer 的底层 Monad，而不改变 Transformer 的类型。
+/// 例如: OptionT(Identity, A) -> OptionT(IO, A)
+///
+/// 这对于在不同效果层之间转换非常有用。
+pub const hoist = struct {
+    /// Hoist for OptionT - 转换 OptionT 的底层 Monad
+    ///
+    /// 给定一个自然变换 nat: M(A) -> N(A)，
+    /// 返回 OptionT(M, A) -> OptionT(N, A)
+    ///
+    /// 示例:
+    /// ```zig
+    /// const nat = struct {
+    ///     fn transform(id: Identity(Option(i32))) IO(Option(i32)) {
+    ///         return IO(Option(i32)).pure(id.run());
+    ///     }
+    /// }.transform;
+    /// const hoisted = hoist.optionT(Identity, IO, i32, nat, optionT_value);
+    /// ```
+    pub fn optionT(
+        comptime M: type,
+        comptime N: type,
+        comptime A: type,
+        nat: *const fn (M) N,
+        ot: OptionT(M, A),
+    ) OptionT(N, A) {
+        return OptionT(N, A).init(nat(ot.inner));
+    }
+
+    /// Hoist for EitherT - 转换 EitherT 的底层 Monad
+    ///
+    /// 给定一个自然变换 nat: M(Either(E, A)) -> N(Either(E, A))，
+    /// 返回 EitherT(M, E, A) -> EitherT(N, E, A)
+    pub fn eitherT(
+        comptime M: type,
+        comptime N: type,
+        comptime E: type,
+        comptime A: type,
+        nat: *const fn (M) N,
+        et: EitherT(M, E, A),
+    ) EitherT(N, E, A) {
+        return EitherT(N, E, A).init(nat(et.inner));
+    }
+
+    /// Hoist for WriterT - 转换 WriterT 的底层 Monad
+    ///
+    /// 给定一个自然变换 nat: M((A, W)) -> N((A, W))，
+    /// 返回 WriterT(M, W, A) -> WriterT(N, W, A)
+    pub fn writerT(
+        comptime M: type,
+        comptime N: type,
+        comptime W: type,
+        comptime A: type,
+        nat: *const fn (M) N,
+        wt: WriterT(M, W, A),
+    ) WriterT(N, W, A) {
+        return WriterT(N, W, A).init(nat(wt.inner));
+    }
+
+    /// Hoist for ReaderT - 转换 ReaderT 的底层 Monad
+    ///
+    /// 给定一个自然变换 nat: M(A) -> N(A)，
+    /// 返回 ReaderT(M, R, A) -> ReaderT(N, R, A)
+    ///
+    /// 注意: ReaderT 的 hoist 需要组合自然变换和 run 函数
+    pub fn readerT(
+        comptime M: type,
+        comptime N: type,
+        comptime R: type,
+        comptime A: type,
+        comptime nat: *const fn (M) N,
+        rt: ReaderT(M, R, A),
+    ) ReaderT(N, R, A) {
+        return ReaderT(N, R, A).init(struct {
+            fn hoistedRunner(r: R) N {
+                const ma = rt.run(r);
+                return nat(ma);
+            }
+        }.hoistedRunner);
+    }
+
+    /// Hoist for StateT - 转换 StateT 的底层 Monad
+    ///
+    /// 给定一个自然变换 nat: M((A, S)) -> N((A, S))，
+    /// 返回 StateT(M, S, A) -> StateT(N, S, A)
+    pub fn stateT(
+        comptime M: type,
+        comptime N: type,
+        comptime S: type,
+        comptime A: type,
+        comptime nat: *const fn (M) N,
+        st: StateT(M, S, A),
+    ) StateT(N, S, A) {
+        return StateT(N, S, A).init(struct {
+            fn hoistedRunner(s: S) N {
+                const ma = st.run(s);
+                return nat(ma);
+            }
+        }.hoistedRunner);
+    }
+};
+
 // ============ 组合工具 ============
 
 /// Transformer 组合工具
@@ -622,4 +728,110 @@ test "WriterT with Identity Monad" {
     const result = writer_transformer.run().run();
     try std.testing.expectEqual(@as(i32, 42), result[0]);
     try std.testing.expectEqualStrings("log message", result[1]);
+}
+
+test "hoist.optionT - transform underlying Monad" {
+    // 定义一个简单的包装 Monad 用于测试
+    const Wrapper = struct {
+        fn Monad(comptime T: type) type {
+            return struct {
+                value: T,
+                wrapped: bool,
+
+                const Self = @This();
+
+                pub fn pure(a: T) Self {
+                    return Self{ .value = a, .wrapped = true };
+                }
+
+                pub fn run(self: Self) T {
+                    return self.value;
+                }
+            };
+        }
+    };
+
+    // 创建一个 OptionT(Identity, i32)
+    const IdentityOption = Identity(Option(i32));
+    const ot = OptionT(IdentityOption, i32).init(IdentityOption.pure(Option(i32).Some(42)));
+
+    // 定义自然变换: Identity -> Wrapper.Monad
+    const nat = struct {
+        fn transform(id: Identity(Option(i32))) Wrapper.Monad(Option(i32)) {
+            return Wrapper.Monad(Option(i32)).pure(id.run());
+        }
+    }.transform;
+
+    // 执行 hoist
+    const hoisted = hoist.optionT(IdentityOption, Wrapper.Monad(Option(i32)), i32, nat, ot);
+
+    // 验证结果
+    const inner_result = hoisted.inner;
+    try std.testing.expect(inner_result.wrapped);
+    try std.testing.expectEqual(@as(i32, 42), inner_result.value.unwrap());
+}
+
+test "hoist.eitherT - transform underlying Monad" {
+    const IdentityEither = Identity(Result(i32, []const u8));
+    const et = EitherT(IdentityEither, []const u8, i32).init(
+        IdentityEither.pure(Result(i32, []const u8).Ok(100)),
+    );
+
+    // 定义包装 Monad
+    const Wrapped = struct {
+        value: Result(i32, []const u8),
+        tag: u8,
+
+        const Self = @This();
+
+        pub fn pure(a: Result(i32, []const u8)) Self {
+            return Self{ .value = a, .tag = 0xFF };
+        }
+    };
+
+    // 自然变换
+    const nat = struct {
+        fn transform(id: IdentityEither) Wrapped {
+            return Wrapped.pure(id.run());
+        }
+    }.transform;
+
+    // 执行 hoist
+    const hoisted = hoist.eitherT(IdentityEither, Wrapped, []const u8, i32, nat, et);
+
+    // 验证
+    try std.testing.expectEqual(@as(u8, 0xFF), hoisted.inner.tag);
+    try std.testing.expectEqual(@as(i32, 100), hoisted.inner.value.unwrap());
+}
+
+test "hoist.writerT - transform underlying Monad" {
+    const IdentityWriter = Identity(struct { i32, []const u8 });
+    const wt = WriterT(IdentityWriter, []const u8, i32).fromWriter(42, "test log");
+
+    // 定义包装 Monad
+    const Wrapped = struct {
+        value: struct { i32, []const u8 },
+        hoisted: bool,
+
+        const Self = @This();
+
+        pub fn pure(a: struct { i32, []const u8 }) Self {
+            return Self{ .value = a, .hoisted = true };
+        }
+    };
+
+    // 自然变换
+    const nat = struct {
+        fn transform(id: IdentityWriter) Wrapped {
+            return Wrapped.pure(id.run());
+        }
+    }.transform;
+
+    // 执行 hoist
+    const hoisted = hoist.writerT(IdentityWriter, Wrapped, []const u8, i32, nat, wt);
+
+    // 验证
+    try std.testing.expect(hoisted.inner.hoisted);
+    try std.testing.expectEqual(@as(i32, 42), hoisted.inner.value[0]);
+    try std.testing.expectEqualStrings("test log", hoisted.inner.value[1]);
 }
