@@ -251,6 +251,84 @@ test "bounds checked" {
 
 ---
 
+## Stories 文件规范（强制）
+
+**核心原则**: 每个版本必须有对应的 Story 文件，且必须与实现状态保持同步。
+
+### Story 文件结构
+
+```
+stories/
+├── v0.1.0-core-types.md      # v0.1.0 核心功能
+├── v0.2.0-extensions.md      # v0.2.0 扩展功能
+└── v0.3.0-advanced.md        # v0.3.0 高级功能
+```
+
+### Story 文件模板
+
+```markdown
+# Story: vX.Y.Z 功能名称
+
+> 简短描述
+
+## 目标
+
+实现的功能列表...
+
+## 验收标准
+
+### 模块名 (module.zig)
+
+- [ ] 功能 1
+- [ ] 功能 2
+- [ ] 单元测试
+
+### 集成
+
+- [ ] root.zig 导出
+- [ ] 文档更新
+- [ ] 测试通过
+
+## 完成状态
+
+- 开始日期: YYYY-MM-DD
+- 完成日期: YYYY-MM-DD
+- 状态: ⏳ 进行中 / ✅ 已完成
+```
+
+### Story 同步规则（强制）
+
+| 时机 | 必须执行的操作 |
+|------|---------------|
+| 开始新版本开发 | 创建对应的 Story 文件，列出所有验收标准 |
+| 完成单个功能 | 将对应的 `[ ]` 改为 `[x]` |
+| 完成整个版本 | 更新完成日期和状态为 ✅ |
+| 添加新功能 | 在 Story 中添加对应的验收标准 |
+| 版本发布前 | 确保所有 `[ ]` 都变为 `[x]` |
+
+### Story 完成检查命令
+
+```bash
+# 检查 Story 中未完成的任务
+grep -rn "\[ \]" stories/
+
+# 检查 Story 状态
+grep -rn "状态:" stories/
+
+# 验证 Story 和 ROADMAP 一致性
+echo "=== ROADMAP ===" && grep -n "✅\|⏳" ROADMAP.md
+echo "=== Stories ===" && grep -rn "状态:" stories/
+```
+
+### 禁止行为
+
+1. **禁止**: 代码完成但 Story 未更新
+2. **禁止**: Story 标记完成但代码未实现
+3. **禁止**: 跳过 Story 直接开发
+4. **禁止**: 版本发布时 Story 中仍有 `[ ]`
+
+---
+
 ## 文档同步更新规范（强制）
 
 **核心原则**: 代码和文档必须同步更新，不允许代码实现后文档滞后。
@@ -731,9 +809,14 @@ const thread = try std.Thread.spawn(.{}, workerFn, .{});
 ### 文档规范
 - [ ] 相关文档已同步更新
 - [ ] ROADMAP.md 状态正确
-- [ ] Story 文件已更新
+- [ ] Story 文件已更新（所有 `[ ]` 改为 `[x]`）
+- [ ] Story 完成状态已更新（⏳ → ✅）
 - [ ] README.md 已更新（如需要）
 - [ ] CHANGELOG.md 已更新
+
+### Story 同步检查
+- [ ] `grep -rn "\[ \]" stories/` 无输出（所有任务完成）
+- [ ] Story 状态与 ROADMAP 一致
 
 ---
 
