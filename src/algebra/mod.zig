@@ -10,6 +10,8 @@
 //! - Eq - 相等性类型类
 //! - Ord - 排序类型类
 //! - Bounded - 有界类型类
+//! - Show - 显示类型类（值转字符串）
+//! - Read - 读取类型类（字符串转值）
 
 const std = @import("std");
 
@@ -22,6 +24,8 @@ pub const category = @import("category.zig");
 pub const eq = @import("eq.zig");
 pub const ord = @import("ord.zig");
 pub const bounded = @import("bounded.zig");
+pub const show = @import("show.zig");
+pub const read = @import("read.zig");
 
 // ============ Semigroup ============
 pub const Semigroup = semigroup.Semigroup;
@@ -158,6 +162,50 @@ pub const boundedI32 = bounded.boundedI32;
 pub const boundedI64 = bounded.boundedI64;
 pub const boundedBool = bounded.boundedBool;
 pub const boundedUnit = bounded.boundedUnit;
+
+// ============ Show ============
+pub const Show = show.Show;
+pub const showI32 = show.showI32;
+pub const showI64 = show.showI64;
+pub const showU8 = show.showU8;
+pub const showU32 = show.showU32;
+pub const showU64 = show.showU64;
+pub const showUsize = show.showUsize;
+pub const showF32 = show.showF32;
+pub const showF64 = show.showF64;
+pub const showBool = show.showBool;
+pub const showString = show.showString;
+pub const showStringQuoted = show.showStringQuoted;
+pub const showOption = show.showOption;
+pub const showResult = show.showResult;
+pub const showSlice = show.showSlice;
+pub const showToWriter = show.showToWriter;
+pub const showInt = show.showInt;
+pub const showFloat = show.showFloat;
+
+// ============ Read ============
+pub const Read = read.Read;
+pub const readI8 = read.readI8;
+pub const readI16 = read.readI16;
+pub const readI32 = read.readI32;
+pub const readI64 = read.readI64;
+pub const readU8 = read.readU8;
+pub const readU16 = read.readU16;
+pub const readU32 = read.readU32;
+pub const readU64 = read.readU64;
+pub const readUsize = read.readUsize;
+pub const readF32 = read.readF32;
+pub const readF64 = read.readF64;
+pub const readBool = read.readBool;
+pub const readString = read.readString;
+pub const readStringQuoted = read.readStringQuoted;
+pub const readHexU32 = read.readHexU32;
+pub const readHexU64 = read.readHexU64;
+pub const readOption = read.readOption;
+pub const parseInt = read.parseInt;
+pub const parseFloat = read.parseFloat;
+pub const readMany = read.readMany;
+pub const readManyStrict = read.readManyStrict;
 
 test {
     std.testing.refAllDecls(@This());

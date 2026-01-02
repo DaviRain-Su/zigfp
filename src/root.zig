@@ -235,6 +235,50 @@ pub const boundedI64 = algebra.boundedI64;
 pub const boundedBool = algebra.boundedBool;
 pub const boundedUnit = algebra.boundedUnit;
 
+// Show
+pub const Show = algebra.Show;
+pub const showI32 = algebra.showI32;
+pub const showI64 = algebra.showI64;
+pub const showU8 = algebra.showU8;
+pub const showU32 = algebra.showU32;
+pub const showU64 = algebra.showU64;
+pub const showUsize = algebra.showUsize;
+pub const showF32 = algebra.showF32;
+pub const showF64 = algebra.showF64;
+pub const showBool = algebra.showBool;
+pub const showString = algebra.showString;
+pub const showStringQuoted = algebra.showStringQuoted;
+pub const showOption = algebra.showOption;
+pub const showResult = algebra.showResult;
+pub const showSlice = algebra.showSlice;
+pub const showToWriter = algebra.showToWriter;
+pub const showInt = algebra.showInt;
+pub const showFloat = algebra.showFloat;
+
+// Read
+pub const Read = algebra.Read;
+pub const readI8 = algebra.readI8;
+pub const readI16 = algebra.readI16;
+pub const readI32 = algebra.readI32;
+pub const readI64 = algebra.readI64;
+pub const readU8 = algebra.readU8;
+pub const readU16 = algebra.readU16;
+pub const readU32 = algebra.readU32;
+pub const readU64 = algebra.readU64;
+pub const readUsize = algebra.readUsize;
+pub const readF32 = algebra.readF32;
+pub const readF64 = algebra.readF64;
+pub const readBool = algebra.readBool;
+pub const readString = algebra.readString;
+pub const readStringQuoted = algebra.readStringQuoted;
+pub const readHexU32 = algebra.readHexU32;
+pub const readHexU64 = algebra.readHexU64;
+pub const readOption = algebra.readOption;
+pub const parseInt = algebra.parseInt;
+pub const parseFloat = algebra.parseFloat;
+pub const readMany = algebra.readMany;
+pub const readManyStrict = algebra.readManyStrict;
+
 // Data - Sequence
 pub const zipWith = data.zipWith;
 pub const ZipWithIterator = data.ZipWithIterator;

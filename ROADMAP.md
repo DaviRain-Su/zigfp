@@ -387,6 +387,18 @@ src/
 | root.zig 导出 | ✅ | 所有新类型类和函数 |
 | 测试验证 | ✅ | 961 tests 全部通过 |
 
+### v2.3.0 - Show/Read 类型类 ✅
+
+| 任务 | 状态 | 说明 |
+|------|------|------|
+| `show.zig` | ✅ | Show 类型类 - 值转字符串表示 (14 tests) |
+| `read.zig` | ✅ | Read 类型类 - 字符串解析为值 (13 tests) |
+| Show 实例 | ✅ | i32/i64/u8/u32/u64/usize/f32/f64/bool/string/Option/Result/Slice |
+| Read 实例 | ✅ | i8-i64/u8-u64/usize/f32/f64/bool/string/hex/Option |
+| 辅助函数 | ✅ | showToWriter, parseInt, parseFloat, readMany, readManyStrict |
+| 导出更新 | ✅ | algebra/mod.zig 和 root.zig 导出 |
+| 测试验证 | ✅ | 991 tests 全部通过 |
+
 ### v2.2.0 - API 整合与重构 ✅
 
 | 任务 | 状态 | 说明 |

@@ -1,5 +1,74 @@
 # zigFP - 函数式编程工具库更新日志
 
+## [v2.3.0] - 2026-01-02 - Show/Read 类型类 ✅
+
+### 🎯 新增功能
+
+#### Show 类型类 - `src/algebra/show.zig`
+
+将值转换为可读字符串表示的类型类，类似于 Haskell 的 `Show` 或 Rust 的 `Display`：
+
+- **类型定义**: `Show(T)` - 显示类型类接口
+- **核心方法**: `showBuf` - 将值格式化到缓冲区
+- **辅助方法**: `showAlloc` - 使用分配器创建字符串
+- **整数实例**: `showI32`, `showI64`, `showU8`, `showU32`, `showU64`, `showUsize`
+- **浮点实例**: `showF32`, `showF64`
+- **其他实例**: `showBool`, `showString`, `showStringQuoted`
+- **复合实例**: `showOption`, `showResult`, `showSlice`
+- **辅助函数**: `showToWriter`, `showInt`, `showFloat`
+
+```zig
+// Show 使用示例
+const show = showI32();
+var buf: [32]u8 = undefined;
+const str = show.showBuf(42, &buf);  // "42"
+
+// Option 显示
+const optShow = comptime showOption(i32, showI32());
+const optStr = optShow.showBuf(Option(i32).Some(42), &buf);  // "Some(42)"
+```
+
+#### Read 类型类 - `src/algebra/read.zig`
+
+将字符串解析为值的类型类，是 Show 的逆操作，类似于 Haskell 的 `Read` 或 Rust 的 `FromStr`：
+
+- **类型定义**: `Read(T)` - 读取类型类接口
+- **核心方法**: `read` - 解析字符串返回 Option
+- **辅助方法**: `readOr`, `readOrElse` - 带默认值的解析
+- **整数实例**: `readI8`, `readI16`, `readI32`, `readI64`, `readU8`, `readU16`, `readU32`, `readU64`, `readUsize`
+- **浮点实例**: `readF32`, `readF64`
+- **其他实例**: `readBool`, `readString`, `readStringQuoted`
+- **十六进制**: `readHexU32`, `readHexU64`
+- **复合实例**: `readOption`
+- **辅助函数**: `parseInt`, `parseFloat`, `readMany`, `readManyStrict`
+
+```zig
+// Read 使用示例
+const read = readI32();
+const result = read.read("42");  // Some(42)
+const invalid = read.read("abc");  // None
+
+// 带默认值
+const value = read.readOr("invalid", 0);  // 0
+
+// 批量解析
+const strings = [_][]const u8{ "1", "2", "3" };
+const values = try readMany(i32, read, &strings, allocator);  // [1, 2, 3]
+```
+
+### 📦 导出更新
+
+- `algebra/mod.zig` 新增 Show 和 Read 导出
+- `root.zig` 新增 Show 和 Read 便捷导出
+
+### 📊 测试统计
+
+- 新增 27 个测试（Show 14 个 + Read 13 个）
+- 总测试数：991 tests
+- 所有测试通过，无内存泄漏
+
+---
+
 ## [v2.2.0] - 2026-01-02 - API 整合与重构 ✅
 
 ### 🎯 改进内容
