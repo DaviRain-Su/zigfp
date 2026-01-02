@@ -70,6 +70,9 @@ jobs:
       - name: Build Validation Example
         run: zig build example-validation
 
+      - name: Build Prelude Example
+        run: zig build example-prelude
+
   docs:
     name: Documentation Check
     runs-on: ubuntu-latest

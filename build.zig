@@ -210,9 +210,28 @@ pub fn build(b: *std.Build) void {
     const validation_step = b.step("example-validation", "Run validation example");
     validation_step.dependOn(&run_validation.step);
 
+    // Prelude example
+    const prelude_example = b.addExecutable(.{
+        .name = "prelude_example",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("examples/prelude_example.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "zigfp", .module = mod },
+            },
+        }),
+    });
+    b.installArtifact(prelude_example);
+
+    const run_prelude = b.addRunArtifact(prelude_example);
+    const prelude_step = b.step("example-prelude", "Run prelude example");
+    prelude_step.dependOn(&run_prelude.step);
+
     // Run all examples
     const examples_step = b.step("examples", "Run all examples");
     examples_step.dependOn(&run_basic.step);
     examples_step.dependOn(&run_monad.step);
     examples_step.dependOn(&run_validation.step);
+    examples_step.dependOn(&run_prelude.step);
 }

@@ -92,10 +92,17 @@ pub const Writer = monad.Writer;
 pub const State = monad.State;
 pub const Cont = monad.Cont;
 pub const Free = monad.Free;
+pub const ask = monad.ask;
+pub const asks = monad.asks;
+pub const tell = monad.tell;
+pub const get = monad.get;
+pub const modify = monad.modify;
 
 // Algebra
 pub const Monoid = algebra.Monoid;
 pub const Semigroup = algebra.Semigroup;
+pub const sumMonoid = algebra.monoid.sumMonoid;
+pub const productMonoid = algebra.monoid.productMonoid;
 
 // Optics
 pub const Lens = optics.Lens;

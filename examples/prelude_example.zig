@@ -3,7 +3,8 @@
 //! 这个文件演示了如何使用 zigFP 的 Prelude 模块
 
 const std = @import("std");
-const prelude = @import("../src/prelude.zig");
+const fp = @import("zigfp");
+const prelude = fp.prelude;
 
 pub fn main() !void {
     std.debug.print("zigFP Prelude 使用示例\n", .{});
@@ -80,11 +81,11 @@ pub fn main() !void {
     std.debug.print("\n6. 模块聚合:\n", .{});
 
     // 直接使用聚合的模块
-    const opt = prelude.option.Some(i32, 42);
-    std.debug.print("  option.Some(42) = {}\n", .{opt.isSome()});
+    const opt = prelude.some(i32, 42);
+    std.debug.print("  some(42) = {}\n", .{opt.isSome()});
 
-    const res = prelude.result.Ok(i32, []const u8, 42);
-    std.debug.print("  result.Ok(42) = {}\n", .{res.isOk()});
+    const res = prelude.ok(i32, []const u8, 42);
+    std.debug.print("  ok(42) = {}\n", .{res.isOk()});
 
     std.debug.print("\nPrelude 示例完成!\n", .{});
 }
