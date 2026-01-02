@@ -24,6 +24,7 @@ jobs:
         uses: goto-bus-stop/setup-zig@v2
         with:
           version: ${{ matrix.zig-version }}
+        timeout-minutes: 10
 
       - name: Build
         run: zig build
@@ -45,6 +46,7 @@ jobs:
         uses: goto-bus-stop/setup-zig@v2
         with:
           version: '0.15.2'
+        timeout-minutes: 10
 
       - name: Check Format
         run: zig fmt --check src/
@@ -60,6 +62,7 @@ jobs:
         uses: goto-bus-stop/setup-zig@v2
         with:
           version: '0.15.2'
+        timeout-minutes: 10
 
       - name: Build Basic Example
         run: zig build example-basic
